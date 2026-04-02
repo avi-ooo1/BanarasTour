@@ -1,0 +1,179 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+
+const MyBookingPage = () => {
+  // Mock data for user's bookings moved to state
+  const [bookings, setBookings] = useState([
+    {
+      id: 'BKG-59821',
+      date: 'Oct 25, 2026',
+      tourTitle: 'Tour Book',
+      status: 'Upcoming',
+      totalAmount: 3500,
+      guests: 2,
+      cars: [
+        { type: 'Sedan (Dzire/Etios) - AC', quantity: 1 }
+      ],
+      paymentStatus: 'Paid Online',
+    },
+    {
+      id: 'BKG-40192',
+      date: 'May 12, 2026',
+      tourTitle: 'Tour Book',
+      status: 'Completed',
+      totalAmount: 2200,
+      guests: 4,
+      cars: [
+        { type: 'SUV (Innova/Ertiga) - AC', quantity: 1 }
+      ],
+      paymentStatus: 'Paid on Arrival',
+    }
+  ]);
+
+  const handleCancelBooking = (bookingId) => {
+    // Show confirmation before cancelling
+    if (window.confirm("Are you sure you want to cancel this booking?")) {
+      setBookings((prevBookings) => 
+        prevBookings.map((booking) => 
+          booking.id === bookingId 
+            ? { ...booking, status: 'Cancelled' } 
+            : booking
+        )
+      );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-10 pb-20 px-4 sm:px-10 md:px-20 lg:px-30">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+              My <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Booking</span>
+            </h1>
+            <p className="mt-2 text-gray-600">View and manage all your past and upcoming tours.</p>
+          </div>
+          <Link 
+            to="/booking"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-white font-semibold shadow-md bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 transition"
+          >
+            + New Booking
+          </Link>
+        </div>
+
+        {/* Bookings List */}
+        {bookings.length > 0 ? (
+          <div className="space-y-6">
+            {bookings.map((booking) => (
+              <div 
+                key={booking.id} 
+                className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-300 relative"
+              >
+                {/* Status Badge - Top Right */}
+                <div className="absolute top-6 right-6 lg:top-8 lg:right-8">
+                  <span 
+                    className={`inline-flex items-center px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full shadow-sm bg-gray-50 ${
+                      booking.status === 'Upcoming' 
+                        ? 'text-green-600 border border-green-200' 
+                        : booking.status === 'Cancelled'
+                          ? 'text-red-600 border border-red-200'
+                          : 'text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    {booking.status === 'Upcoming' && <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>}
+                    {booking.status === 'Cancelled' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>}
+                    {booking.status}
+                  </span>
+                </div>
+
+                {/* Details Section */}
+                <div className="p-6 md:p-8 flex-1 flex flex-col justify-between">
+                  <div className="flex flex-col mb-4">
+                    <div className="mb-4 pr-32">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-1">{booking.tourTitle}</h2>
+                      <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                        <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {booking.date}
+                      </p>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-2xl font-bold text-orange-600">₹{booking.totalAmount.toLocaleString()}</p>
+                      <p className="text-xs font-medium text-gray-400 mt-1 uppercase tracking-wider">{booking.paymentStatus}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100 my-4"></div>
+
+                  {/* Summary Footer */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                    <div>
+                      <span className="block text-gray-400 font-medium text-xs uppercase mb-1">Booking ID</span>
+                      <span className="font-semibold text-gray-800">{booking.id}</span>
+                    </div>
+                    <div>
+                      <span className="block text-gray-400 font-medium text-xs uppercase mb-1">Guests</span>
+                      <span className="font-semibold text-gray-800">{booking.guests} Person{booking.guests > 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="col-span-2 lg:col-span-2">
+                      <span className="block text-gray-400 font-medium text-xs uppercase mb-1">Vehicles Selected</span>
+                      <div className="flex flex-wrap gap-2">
+                        {booking.cars.map((car, idx) => (
+                          <span key={idx} className="inline-flex items-center px-2 py-1 bg-gray-50 border border-gray-200 rounded text-xs font-medium text-gray-700">
+                            {car.quantity}x {car.type}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  {booking.status === 'Upcoming' && (
+                    <div className="mt-6 flex gap-3">
+                      <button 
+                        onClick={() => handleCancelBooking(booking.id)}
+                        className="px-5 py-2 text-sm font-semibold rounded-lg text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 hover:border-red-200 transition"
+                      >
+                        Cancel Booking
+                      </button>
+                    </div>
+                  )}
+                  {booking.status === 'Completed' && (
+                    <div className="mt-6 flex gap-3">
+                      <button className="px-5 py-2 text-sm font-semibold border border-orange-200 rounded-lg text-orange-600 hover:bg-orange-50 transition">
+                        Leave a Review
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Empty State */
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-200 shadow-sm border-dashed">
+            <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-50 text-orange-500">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No bookings found</h3>
+            <p className="text-gray-500 mb-8 max-w-sm mx-auto">It looks like you haven't booked any tours with us yet. Start exploring the beauty of Banaras today!</p>
+            <Link 
+              to="/booking"
+              className="inline-flex items-center px-6 py-3 rounded-xl text-white font-semibold shadow-md bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 transition"
+            >
+              Explore Tours
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default MyBookingPage;
