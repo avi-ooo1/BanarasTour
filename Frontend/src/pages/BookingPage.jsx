@@ -185,9 +185,9 @@ const BookingPage = () => {
                   {formData.selectedCars.length > 0 && (
                     <div className="mb-6 space-y-3">
                       {formData.selectedCars.map((car, index) => (
-                        <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                          <div>
-                            <p className="font-medium text-gray-800">{car.type.split(' - ')[0]} - {car.type.includes('Non AC') ? 'Non AC' : 'AC'}</p>
+                        <div key={index} className="flex flex-wrap justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200 gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-800 truncate">{car.type.split(' - ')[0]} - {car.type.includes('Non AC') ? 'Non AC' : 'AC'}</p>
                             <p className="text-sm text-gray-500">Qty: {car.quantity} × ₹{getPriceFromType(car.type).toLocaleString()}</p>
                           </div>
                           <div className="flex items-center gap-4">
@@ -209,36 +209,37 @@ const BookingPage = () => {
                   )}
 
                   {/* Add New Vehicle Form */}
-                  <div className="bg-white p-4 rounded-lg border border-gray-200 flex flex-col sm:flex-row gap-4 items-end shadow-sm">
-                    <div className="w-full sm:w-2/3">
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 flex flex-wrap gap-4 items-end shadow-sm">
+                    <div className="flex-1 min-w-[200px]">
                       <label htmlFor="carType" className="block text-sm font-medium text-gray-700 mb-1">Add a Vehicle</label>
                       <select
                         id="carType"
                         value={currentCarSelection.type}
                         onChange={(e) => setCurrentCarSelection({...currentCarSelection, type: e.target.value})}
-                        className="py-2.5 px-3 block w-full shadow-sm focus:ring-orange-500 focus:border-orange-500 border-gray-300 rounded-lg border bg-gray-50 text-sm"
+                        className="py-2.5 px-3 block w-full shadow-sm focus:ring-orange-500 focus:border-orange-500 border-gray-300 rounded-lg border bg-gray-50 text-sm truncate"
+                        style={{ maxWidth: '100%' }}
                       >
                         <option value="" disabled hidden>Select a car type...</option>
-                        <optgroup label="Standard Options (4 Passengers)">
-                          <option value="Sedan (Dzire/Etios) - Non AC - 4 Seater - 1200">Sedan (Dzire/Etios) - Non AC - 4 Seater - ₹1,200/day</option>
-                          <option value="Sedan (Dzire/Etios) - AC - 4 Seater - 1500">Sedan (Dzire/Etios) - AC - 4 Seater - ₹1,500/day</option>
+                        <optgroup label="Standard (4 Passengers)">
+                          <option value="Sedan (Dzire/Etios) - Non AC - 4 Seater - 1200">Sedan - Non AC - ₹1,200/day</option>
+                          <option value="Sedan (Dzire/Etios) - AC - 4 Seater - 1500">Sedan - AC - ₹1,500/day</option>
                         </optgroup>
-                        <optgroup label="SUV Options (6 Passengers)">
-                          <option value="SUV (Innova/Ertiga) - Non AC - 6 Seater - 2000">SUV (Innova/Ertiga) - Non AC - 6 Seater - ₹2,000/day</option>
-                          <option value="SUV (Innova/Ertiga) - AC - 6 Seater - 2500">SUV (Innova/Ertiga) - AC - 6 Seater - ₹2,500/day</option>
+                        <optgroup label="SUV (6 Passengers)">
+                          <option value="SUV (Innova/Ertiga) - Non AC - 6 Seater - 2000">SUV - Non AC - ₹2,000/day</option>
+                          <option value="SUV (Innova/Ertiga) - AC - 6 Seater - 2500">SUV - AC - ₹2,500/day</option>
                         </optgroup>
-                        <optgroup label="Premium SUVs (6 Passengers)">
-                          <option value="Premium SUV (Innova Crysta) - Non AC - 6 Seater - 3000">Premium SUV (Innova Crysta) - Non AC - 6 Seater - ₹3,000/day</option>
-                          <option value="Premium SUV (Innova Crysta) - AC - 6 Seater - 3500">Premium SUV (Innova Crysta) - AC - 6 Seater - ₹3,500/day</option>
+                        <optgroup label="Premium SUV (6 Passengers)">
+                          <option value="Premium SUV (Innova Crysta) - Non AC - 6 Seater - 3000">Innova Crysta - Non AC - ₹3,000/day</option>
+                          <option value="Premium SUV (Innova Crysta) - AC - 6 Seater - 3500">Innova Crysta - AC - ₹3,500/day</option>
                         </optgroup>
-                        <optgroup label="Luxury Sedans (4 Passengers)">
-                          <option value="Luxury Sedan (Honda City) - Non AC - 4 Seater - 2500">Luxury Sedan (Honda City) - Non AC - 4 Seater - ₹2,500/day</option>
-                          <option value="Luxury Sedan (Honda City) - AC - 4 Seater - 3000">Luxury Sedan (Honda City) - AC - 4 Seater - ₹3,000/day</option>
+                        <optgroup label="Luxury Sedan (4 Passengers)">
+                          <option value="Luxury Sedan (Honda City) - Non AC - 4 Seater - 2500">Honda City - Non AC - ₹2,500/day</option>
+                          <option value="Luxury Sedan (Honda City) - AC - 4 Seater - 3000">Honda City - AC - ₹3,000/day</option>
                         </optgroup>
                       </select>
                     </div>
 
-                    <div className="w-full sm:w-1/4">
+                    <div className="w-24 flex-shrink-0">
                       <label htmlFor="carQuantity" className="block text-sm font-medium text-gray-700 mb-1">Qty</label>
                       <input
                         type="number"
@@ -251,11 +252,11 @@ const BookingPage = () => {
                       />
                     </div>
 
-                    <div className="w-full sm:w-auto">
+                    <div className="flex-shrink-0">
                       <button
                         type="button"
                         onClick={handleAddCar}
-                        className="w-full py-2.5 px-4 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium text-sm border border-transparent whitespace-nowrap"
+                        className="w-full py-2.5 px-6 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium text-sm border border-transparent"
                       >
                         + Add
                       </button>

@@ -10,6 +10,7 @@ import BookingPage from './pages/BookingPage';
 import MyBookingPage from './pages/MyBookingPage';
 import ScrollToTop from './components/ScrollToTop';
 import MyProfilePage from './pages/MyProfilePage';
+import PlaceDetailsPage from './pages/PlaceDetailsPage';
 
 
 const App = () => {
@@ -21,6 +22,7 @@ const App = () => {
         <Route path='/' element={<HomePage />} />
         <Route path='/tour' element={<TourPage />} />
         <Route path='/tour/:speciality' element={<TourPage />} />
+        <Route path='/place/:id' element={<PlaceDetailsPage />} />
         <Route path='/contact' element={<ContactUsPage />} />
         <Route path='/about' element={<AboutPage />} />
         <Route path='/booking' element={<BookingPage />} />

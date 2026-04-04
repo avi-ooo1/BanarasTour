@@ -8,6 +8,7 @@ import connectCloudinary from "./configs/cloudinary.js";
 import adminRouter from "./routes/adminRoutes.js";
 import productRouter from "./routes/productRoutes.js";
 import myBookingRouter from "./routes/myBookingRoutes.js";
+import bookingRouter from "./routes/bookingRoutes.js";
 
 
 const app = express();
@@ -44,6 +45,9 @@ app.use("/api/product",productRouter);
 
 //My Booking Routes
 app.use("/api/my-booking",myBookingRouter);
+
+//Booking Routes
+app.use("/api/booking",bookingRouter);
 
 
 app.listen(port,()=>{

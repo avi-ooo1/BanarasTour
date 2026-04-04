@@ -59,7 +59,7 @@ const TourPage = () => {
         <div className="w-full">
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4 sm:px-0">
         {displayData.map((item, index) => (
-          <div key={item.id || index} className="w-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 cursor-pointer hover:translate-y-[-10px] transition-all duration-500">
+          <div key={item.id || index} onClick={() => navigate(`/place/${item.id}`)} className="w-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 cursor-pointer hover:translate-y-[-10px] transition-all duration-500">
             <img className="h-[200px] w-full object-cover" src={item.image} alt={item.name} />
             <div className="p-4">
               <h5 className="text-xl font-semibold tracking-tight text-gray-900 mb-2 text-center">{item.name}</h5>
