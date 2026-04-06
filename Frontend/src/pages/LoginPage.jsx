@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { AppContext } from '../context/AppContext';
 
 const LoginPage = () => {
+    const { setIsAuth, setUserData } = useContext(AppContext);
+    const navigate = useNavigate();
     const [state, setState] = useState('Login');
     
     // Form States
@@ -15,7 +20,32 @@ const LoginPage = () => {
 
     const onSubmitHandler = async (event) => {
         event.preventDefault();
-        // Authentication logic goes here
+        try {
+            const url = state === 'Sign Up' ? 'http://localhost:4000/api/user/register' : 'http://localhost:4000/api/user/login';
+            
+            // Backend register expects: {name, email, password}
+            const payload = state === 'Sign Up' ? { name, email, password } : { email, password };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                setIsAuth(true);
+                setUserData(data.user);
+                toast.success(state === 'Sign Up' ? "Registered Successfully!" : "Logged In Successfully!");
+                navigate('/');
+            } else {
+                toast.error(data.message || 'Authentication failed');
+            }
+        } catch (error) {
+            console.error("Auth error", error);
+            toast.error("Something went wrong. Please try again.");
+        }
     };
 
     return (

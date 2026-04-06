@@ -1,13 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import logo from '../assets/NavbarAssets/logo.png';
 import dropdownIcon from '../assets/Dropdown-icon.png';
 import { useNavigate, NavLink } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
+import { toast } from 'react-toastify';
 
 
 function Navbar() {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
-  const [token, setToken] = useState(true);
+  const { isAuth, setIsAuth, setUserData } = useContext(AppContext);
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/user/logout', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success || data.message === "Not Authorized") {
+        setIsAuth(false);
+        setUserData(null);
+        toast.success("Logged Out Successfully");
+        navigate('/');
+      } else {
+        toast.error("Logout failed: " + data.message);
+      }
+    } catch (error) {
+      console.error('Logout error', error);
+      // Force logout on frontend anyway if network fails
+      setIsAuth(false);
+      setUserData(null);
+      toast.success("Logged Out Successfully");
+    }
+  };
 
   return (
     <div className='flex justify-between items-center text-sm border-b py-4 mb-5 mx-4 md:mx-10 lg:mx-20 border-b-gray-400 lg:ml-30 lg:mr-30 relative'>
@@ -70,7 +96,7 @@ function Navbar() {
        
         <div className='flex items-center gap-4'>
            {
-          token 
+          isAuth 
           ? <div className="flex items-center gap-1 cursor-pointer group relative">
             <img className="w-8 rounded-full" src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200" alt="" />
             <img className="w-6 mt-2" src={dropdownIcon} alt="Dropdown" />
@@ -78,7 +104,7 @@ function Navbar() {
               <div className='min-w-48 bg-stone-100 rounded flex flex-col gap-4 p-4'>
                 <p onClick={()=>navigate('/my-profile')} className='hover:text-black cursor-pointer'>My Profile</p>
                 <p onClick={()=>navigate('/my-bookings')} className='hover:text-black cursor-pointer'>My Bookings</p>
-                <p onClick={()=>setToken(false)} className='hover:text-black cursor-pointer'>Logout</p>
+                <p onClick={handleLogout} className='hover:text-black cursor-pointer'>Logout</p>
               </div>
             </div> 
           </div>
@@ -116,7 +142,7 @@ function Navbar() {
             HOME
           </NavLink>
           {
-            token && (
+            isAuth && (
               <>
                 <NavLink to='/my-profile' onClick={() => setShowMenu(false)} className="hover:text-blue-500 py-1 transition">
                   MY PROFILE
@@ -141,8 +167,8 @@ function Navbar() {
           </NavLink>
           <div className="mt-2 pt-3 border-t border-gray-100">
             {
-              token
-              ? <button onClick={()=>{setToken(false); setShowMenu(false);}} className="cursor-pointer text-center hover:bg-gray-600 bg-gray-500 text-white rounded-full py-1 w-full transition font-medium">Logout</button>
+              isAuth
+              ? <button onClick={()=>{handleLogout(); setShowMenu(false);}} className="cursor-pointer text-center hover:bg-gray-600 bg-gray-500 text-white rounded-full py-1 w-full transition font-medium">Logout</button>
               :<button onClick={()=>{navigate('/login'); setShowMenu(false);}} className="w-full bg-gray-500 hover:bg-gray-600 transition text-white rounded text-xs py-2 px-4 shadow-sm">Create account</button>
             }
           </div>

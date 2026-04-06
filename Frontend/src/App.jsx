@@ -1,5 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import HomePage from './pages/HomePage';
 import Navbar from './components/NavBar';
 import Footer from './components/Footer';
@@ -17,6 +19,7 @@ import AdminPanelPage from './pages/AdminPanelPage';
 const App = () => {
   return (
     <div>
+      <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
       <ScrollToTop />
       <Navbar />
       <Routes>

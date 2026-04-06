@@ -5,7 +5,8 @@ import Booking from "../models/Booking.js";
 export const addBooking = async(req,res)=>{
     try {
         const { userId, ...bookingData } = req.body;
-        await Booking.create({ ...bookingData, userId });
+        const actualUserId = userId || req.userId;
+        await Booking.create({ ...bookingData, userId: actualUserId });
         res.json({success:true,message:"Booking Placed Successfully"});
     } catch (error) {
         console.log(error);
@@ -16,7 +17,7 @@ export const addBooking = async(req,res)=>{
 // Get Booking : api/booking/get
 export const getBookings  = async(req,res)=>{
     try {
-        const {userId} = req.body;
+        const userId = req.userId || req.body.userId;
         const bookings = await Booking.find({userId});
         res.json({success:true,bookings});
     } catch (error) {

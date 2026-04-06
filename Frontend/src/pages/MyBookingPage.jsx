@@ -2,37 +2,42 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const MyBookingPage = () => {
-  // Mock data for user's bookings moved to state
-  const [bookings, setBookings] = useState([
-    {
-      id: 'BKG-59821',
-      date: 'Oct 25, 2026',
-      tourTitle: 'Tour Book',
-      status: 'Upcoming',
-      totalAmount: 3500,
-      guests: 2,
-      cars: [
-        { type: 'Sedan (Dzire/Etios) - AC', quantity: 1 }
-      ],
-      paymentStatus: 'Paid Online',
-    },
-    {
-      id: 'BKG-40192',
-      date: 'May 12, 2026',
-      tourTitle: 'Tour Book',
-      status: 'Completed',
-      totalAmount: 2200,
-      guests: 4,
-      cars: [
-        { type: 'SUV (Innova/Ertiga) - AC', quantity: 1 }
-      ],
-      paymentStatus: 'Paid on Arrival',
-    }
-  ]);
+  const [bookings, setBookings] = useState([]);
 
-  const handleCancelBooking = (bookingId) => {
+  React.useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/booking/get', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+        const data = await response.json();
+        if (data.success) {
+          // Map DB response to UI format
+          const formattedBookings = data.bookings.map(b => ({
+            id: b._id,
+            date: b.date,
+            tourTitle: b.tourTitle || 'Banaras Tour Package',
+            status: b.status || 'Upcoming',
+            totalAmount: b.totalAmount,
+            guests: b.guests,
+            cars: b.selectedCars || [],
+            paymentStatus: b.payment ? 'Paid Online' : (b.paymentMethod === 'Offline' ? 'Pay on Arrival' : 'Pending'),
+          }));
+          setBookings(formattedBookings.reverse()); // latest first
+        }
+      } catch (err) {
+        console.error("Failed to fetch bookings", err);
+      }
+    };
+    fetchBookings();
+  }, []);
+
+  const handleCancelBooking = async (bookingId) => {
     // Show confirmation before cancelling
     if (window.confirm("Are you sure you want to cancel this booking?")) {
+      // Future TODO: Create cancel booking API and call it here.
       setBookings((prevBookings) => 
         prevBookings.map((booking) => 
           booking.id === bookingId 

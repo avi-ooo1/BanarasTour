@@ -9,6 +9,8 @@ import adminRouter from "./routes/adminRoutes.js";
 import productRouter from "./routes/productRoutes.js";
 import myBookingRouter from "./routes/myBookingRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
+import paymentRouter from "./routes/paymentRoutes.js";
+import contactRouter from "./routes/contactRoutes.js";
 
 
 const app = express();
@@ -49,6 +51,11 @@ app.use("/api/my-booking",myBookingRouter);
 //Booking Routes
 app.use("/api/booking",bookingRouter);
 
+//Payment Routes
+app.use("/api/payment", paymentRouter);
+
+//Contact Routes
+app.use("/api/contact", contactRouter);
 
 app.listen(port,()=>{
     console.log(`Server is running on port ${port}`);

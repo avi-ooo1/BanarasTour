@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import bookingBanner from '../assets/BookingAssets/BookingBanner.png';
 
 const BookingPage = () => {
@@ -53,10 +54,116 @@ const BookingPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Booking Details:', formData);
-    alert('Booking Confirmed Successfully!');
+
+    const saveBooking = async (paymentVerified) => {
+      try {
+        const bookingPayload = {
+          ...formData,
+          totalAmount,
+          payment: paymentVerified,
+        };
+        const response = await fetch('http://localhost:4000/api/booking/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(bookingPayload),
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast.success('Booking Confirmed Successfully!');
+          window.location.href = '/my-bookings';
+        } else {
+          toast.error('Failed to save booking: ' + (data.message || 'Unknown error'));
+        }
+      } catch (err) {
+        console.error('Error saving booking:', err);
+        toast.error('An error occurred while saving the booking.');
+      }
+    };
+
+    if (formData.paymentMethod === 'Online') {
+      try {
+        const orderResponse = await fetch('http://localhost:4000/api/payment/razorpay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: totalAmount }),
+        });
+
+        const orderData = await orderResponse.json();
+
+        if (orderData.success) {
+          const options = {
+            key: orderData.key_id,
+            amount: orderData.order.amount,
+            currency: 'INR',
+            name: 'Banaras Tour',
+            description: 'Test Card: 5104015555555558 | UPI: success@razorpay',
+            order_id: orderData.order.id,
+            handler: async function (response) {
+              try {
+                const verifyResponse = await fetch('http://localhost:4000/api/payment/verify', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                  }),
+                });
+                const verifyData = await verifyResponse.json();
+                if (verifyData.success) {
+                  // Save the booking to backend now that payment is verified
+                  await saveBooking(true);
+                } else {
+                  toast.error('Payment verification failed.');
+                }
+              } catch (error) {
+                console.error("Verification error", error);
+                toast.error("Verification process encountered an error.");
+              }
+            },
+            prefill: {
+              name: formData.name,
+              email: formData.email,
+              contact: formData.phone,
+            },
+            theme: {
+              color: '#ea580c', // Tailwind's orange-600
+            },
+            config: {
+              display: {
+                blocks: {
+                  custom_options: {
+                    name: 'Select UPI or Card',
+                    instruments: [
+                      { method: 'upi' },
+                      { method: 'card' }
+                    ]
+                  }
+                },
+                sequence: ['block.custom_options'],
+                preferences: {
+                  show_default_blocks: false
+                }
+              }
+            }
+          };
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        } else {
+          toast.error('Failed to initiate payment.');
+        }
+      } catch (error) {
+        console.error('Error during payment processing', error);
+        toast.error('An error occurred. Please try again.');
+      }
+    } else {
+      // Offline Payment
+      await saveBooking(false);
+    }
   };
 
   const totalCarPrice = formData.selectedCars.reduce((sum, car) => {
@@ -330,6 +437,19 @@ const BookingPage = () => {
 
                 {/* Submit Button */}
                 <div className="pt-5 pb-2">
+                  {formData.paymentMethod === 'Online' && (
+                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                      <strong>Test Mode Credentials:</strong>
+                      <ul className="mt-1 space-y-1 list-disc list-inside">
+                        <li><strong>Card:</strong> 5104 0155 5555 5558</li>
+                        <li><strong>Expiry:</strong> Any future date (e.g., 12/30)</li>
+                        <li><strong>CVV:</strong> Any 3 digits (e.g., 123)</li>
+                        <li><strong>UPI (Success):</strong> success@razorpay</li>
+                        <li><strong>UPI (Failure):</strong> failure@razorpay</li>
+                      </ul>
+                      <p className="mt-2 text-xs text-blue-600">Note: Razorpay kisi bhi random number ko accept nahi karta, aapko inhi test details ka use karna hoga.</p>
+                    </div>
+                  )}
                   <button
                     type="submit"
                     disabled={formData.selectedCars.length === 0}
