@@ -26,12 +26,11 @@ export const adminLogin = async(req,res) =>{
 //Check Admin : api/admin/is-auth
 export const isAdminAuth = async(req,res) =>{
     try {
-        return res.json({success:true,user});
+        return res.json({success:true});
     } catch (error) {
         console.log(error.message);
         return res.json({success:false,message:error.message});
     }
-    
 }
 
 //Logout Admin : api/admin/logout

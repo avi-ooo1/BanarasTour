@@ -11,7 +11,8 @@ import MyBookingPage from './pages/MyBookingPage';
 import ScrollToTop from './components/ScrollToTop';
 import MyProfilePage from './pages/MyProfilePage';
 import PlaceDetailsPage from './pages/PlaceDetailsPage';
-
+import LoginPage from './pages/LoginPage';
+import AdminPanelPage from './pages/AdminPanelPage';
 
 const App = () => {
   return (
@@ -28,6 +29,8 @@ const App = () => {
         <Route path='/booking' element={<BookingPage />} />
         <Route path='/my-bookings' element={<MyBookingPage />} />
         <Route path='/my-profile' element={<MyProfilePage />} />
+        <Route path='/login' element={<LoginPage />} />
+        <Route path='/admin' element={<AdminPanelPage />} />
       </Routes>
       <Footer />
     </div>

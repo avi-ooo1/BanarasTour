@@ -12,7 +12,7 @@ export const addProduct = async(req,res)=>{
                 return result.secure_url
             })
         )
-        await Product.create({...productData,images:imagesUrl});
+        await Product.create({...productData, image: imagesUrl[0]});
         res.json({success:true,message:"Product Added Successfully"})
     } catch (error) {
         console.log(error.message);
@@ -53,5 +53,17 @@ export const changeStock = async(req,res)=>{
     } catch (error) {
         console.log(error.message);
         res.json({success:false,message:error.message})
+    }
+}
+
+// Remove Product : /api/product/remove
+export const removeProduct = async(req,res) => {
+    try {
+        const {id} = req.body;
+        await Product.findByIdAndDelete(id);
+        res.json({success:true, message:"Product Removed Successfully"});
+    } catch (error) {
+        console.log(error.message);
+        res.json({success:false, message:error.message});
     }
 }
