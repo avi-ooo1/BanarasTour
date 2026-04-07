@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AppContext } from '../context/AppContext';
+import { toast } from 'react-toastify';
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 
 const AdminPanelPage = () => {
+    const { tours, getToursData } = useContext(AppContext);
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
     
-    const [tours, setTours] = useState([]);
     const [bookings, setBookings] = useState([]);
     
     // Add Tour States
@@ -23,7 +25,6 @@ const AdminPanelPage = () => {
 
     useEffect(() => {
         if (!isAuthenticated) return;
-        if (activeTab === 'tours' || activeTab === 'dashboard') fetchTours();
         if (activeTab === 'bookings' || activeTab === 'dashboard') fetchBookings();
     }, [activeTab, isAuthenticated]);
 
@@ -51,25 +52,24 @@ const AdminPanelPage = () => {
             const data = await res.json();
             if (data.success) {
                 setIsAuthenticated(true);
+                toast.success("Admin Logged In");
             } else {
-                alert(data.message || "Invalid Credentials");
+                toast.error(data.message || "Invalid Credentials");
             }
         } catch (error) {
             console.error("Login failed:", error);
         }
     };
 
-    const fetchTours = async () => {
+    const handleLogout = async () => {
         try {
-            const res = await fetch(`${backendUrl}/api/product/list`, {
-                credentials: 'include'
-            });
+            const res = await fetch(`${backendUrl}/api/admin/logout`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
-                setTours(data.products || []);
+                setIsAuthenticated(false);
             }
         } catch (error) {
-            console.error("Error fetching tours:", error);
+            console.error("Logout failed:", error);
         }
     };
 
@@ -83,6 +83,8 @@ const AdminPanelPage = () => {
             const data = await res.json();
             if (data.success) {
                 setBookings(data.bookings || []);
+            } else if (data.message === "Not Authorized") {
+                setIsAuthenticated(false);
             }
         } catch (error) {
             console.error("Error fetching bookings:", error);
@@ -104,11 +106,11 @@ const AdminPanelPage = () => {
             });
             const data = await res.json();
             if (data.success) {
-                alert("Tour Added Successfully");
+                toast.success("Tour Added Successfully");
                 setName(''); setDescription(''); setImage(null);
-                fetchTours();
+                getToursData();
             } else {
-                alert(data.message);
+                toast.error(data.message || "Failed to add tour");
             }
         } catch (error) {
             console.error(error);
@@ -126,8 +128,10 @@ const AdminPanelPage = () => {
             });
             const data = await res.json();
             if (data.success) {
-                alert("Tour Deleted");
-                fetchTours();
+                toast.success("Tour Deleted Successfully");
+                getToursData();
+            } else {
+                toast.error(data.message || "Delete failed");
             }
         } catch (error) {
             console.error(error);
@@ -144,8 +148,10 @@ const AdminPanelPage = () => {
             });
             const data = await res.json();
             if (data.success) {
-                alert("Status Updated");
+                toast.success("Booking Status Updated");
                 fetchBookings();
+            } else {
+                toast.error(data.message || "Update failed");
             }
         } catch (error) {
             console.error(error);
@@ -163,8 +169,10 @@ const AdminPanelPage = () => {
             });
             const data = await res.json();
             if (data.success) {
-                alert("Booking Deleted");
+                toast.success("Booking Deleted Successfully");
                 fetchBookings();
+            } else {
+                toast.error(data.message || "Failed to delete booking");
             }
         } catch (error) {
             console.error(error);
@@ -239,6 +247,15 @@ const AdminPanelPage = () => {
                     >
                         Booking Orders
                     </button>
+                    
+                    <div className="pt-8 mt-8 border-t border-gray-100">
+                        <button 
+                            onClick={handleLogout}
+                            className="w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-red-600 hover:bg-red-50"
+                        >
+                            Logout Session
+                        </button>
+                    </div>
                 </nav>
             </div>
 
@@ -250,15 +267,6 @@ const AdminPanelPage = () => {
                     <div className="space-y-6">
                         <h1 className="text-3xl font-bold text-gray-800">System Overview</h1>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-500 text-sm font-semibold uppercase tracking-wider">Total Tours</p>
-                                    <p className="text-3xl font-bold text-gray-900 mt-2">{tours.length > 0 ? tours.length : '--'}</p>
-                                </div>
-                                <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                </div>
-                            </div>
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-500 text-sm font-semibold uppercase tracking-wider">Total Bookings</p>
@@ -333,27 +341,29 @@ const AdminPanelPage = () => {
                                             <td colSpan="3" className="text-center py-10 text-gray-500">No tours available. Fetching data or database empty.</td>
                                         </tr>
                                     ) : (
-                                        tours.map((tour, idx) => (
-                                            <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                                                <td className="p-4 flex items-center gap-4">
-                                                    {tour.image ? (
-                                                        <img src={tour.image} alt={tour.name} className="w-12 h-12 rounded-lg object-cover" />
-                                                    ) : (
-                                                        <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                                                    )}
-                                                    <div>
-                                                        <p className="font-bold text-gray-800">{tour.name}</p>
-                                                        <p className="text-xs text-gray-500 truncate max-w-[200px]">{tour.description}</p>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 text-gray-600">{tour.category}</td>
-                                                <td className="p-4 text-right">
-                                                    <button onClick={() => handleDeleteTour(tour._id)} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
+                                        tours.map((tour, idx) => {
+                                            return (
+                                                <tr key={tour._id || idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                                    <td className="p-4 flex items-center gap-4">
+                                                        {tour.image ? (
+                                                            <img src={tour.image} alt={tour.name} className="w-12 h-12 rounded-lg object-cover" />
+                                                        ) : (
+                                                            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                                                        )}
+                                                        <div>
+                                                            <p className="font-bold text-gray-800">{tour.name}</p>
+                                                            <p className="text-xs text-gray-500 truncate max-w-[200px]">{tour.description || tour.about}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4 text-gray-600">{tour.category}</td>
+                                                    <td className="p-4 text-right">
+                                                        <button onClick={() => handleDeleteTour(tour._id)} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>

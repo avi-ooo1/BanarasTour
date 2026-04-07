@@ -1,48 +1,24 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { topFamousData, templesData, entertainmentData, ghatData, sweetData, foodData, shoppingData } from '../assets/assets'
-
+import { AppContext } from '../context/AppContext'
 
 const TourPage = () => {
 
-    const {speciality} = useParams();
+    const { speciality } = useParams();
     const navigate = useNavigate();
-    const [displayData, setDisplayData] = useState(topFamousData);
+    const { tours } = useContext(AppContext);
+    const [displayData, setDisplayData] = useState([]);
 
     useEffect(() => {
-        if (speciality === 'Temple') {
-            setDisplayData(templesData);
-        } else if (speciality === 'Ghat') {
-            setDisplayData(ghatData);
-        } else if (speciality === 'Entertainment') {
-            setDisplayData(entertainmentData);
-        } else if (speciality === 'Sweet') {
-            setDisplayData(sweetData);
-        } else if (speciality === 'Fast Food') {
-            setDisplayData(foodData);
-        } else if (speciality === 'Shopping') {
-            setDisplayData(shoppingData);
+        if (!tours || tours.length === 0) return;
+
+        if (speciality) {
+            const filtered = tours.filter(item => item.category === speciality);
+            setDisplayData(filtered);
         } else {
-            // Merge all data to show everything
-            const allItems = [
-                ...templesData, 
-                ...ghatData, 
-                ...entertainmentData, 
-                ...sweetData, 
-                ...foodData, 
-                ...shoppingData
-            ];
-            
-            // Note: Since TopFamous might overlap with items from other categories,
-            // we ensure we are displaying unique items if ids are present.
-            // Using a Map or simple filtering to dedup by id or name if preferred.
-            // For a simpler merge, we will just concatenate all unique items by name or ID.
-            
-            const uniqueItems = Array.from(new Map(allItems.map(item => [item.id, item])).values());
-            
-            setDisplayData(uniqueItems);
+            setDisplayData(tours);
         }
-    }, [speciality]);
+    }, [speciality, tours]);
 
   return (
     <div>
@@ -59,11 +35,11 @@ const TourPage = () => {
         <div className="w-full">
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4 sm:px-0">
         {displayData.map((item, index) => (
-          <div key={item.id || index} onClick={() => navigate(`/place/${item.id}`)} className="w-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 cursor-pointer hover:translate-y-[-10px] transition-all duration-500">
+          <div key={item._id || item.id || index} onClick={() => navigate(`/place/${item._id || item.id}`)} className="w-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 cursor-pointer hover:translate-y-[-10px] transition-all duration-500">
             <img className="h-[200px] w-full object-cover" src={item.image} alt={item.name} />
             <div className="p-4">
               <h5 className="text-xl font-semibold tracking-tight text-gray-900 mb-2 text-center">{item.name}</h5>
-              <p className="text-sm text-gray-600 leading-relaxed text-center line-clamp-2">{item.about}</p>
+              <p className="text-sm text-gray-600 leading-relaxed text-center line-clamp-2">{item.description || item.about}</p>
             </div>
           </div>
         ))}

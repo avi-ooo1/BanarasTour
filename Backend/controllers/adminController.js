@@ -1,19 +1,17 @@
 import jwt from "jsonwebtoken";
 
-// Login Seller : api/seller/login
-
+// Login Admin : api/admin/login
 export const adminLogin = async(req,res) =>{
    try {
      const {email,password} = req.body;
    if(password === process.env.ADMIN_PASSWORD && email === process.env.ADMIN_EMAIL){
-     const token = jwt.sign({email},process.env.JWT_SECRET,{expiresIn : '7d'});
-      res.cookie('adminToken',token,{
-            httpOnly:true,
-            secure:process.env.Node_ENV === "production",
-            sameSite:process.env.Node_ENV === 'production' ? 'none' : 'strict',
-            maxAge:7 * 24 * 60 * 60 * 1000
-        });
-        res.json({success:true,message:"Admin Login Successfully"});
+      const token = jwt.sign({email},process.env.JWT_SECRET,{expiresIn : '24h'});
+       res.cookie('adminToken',token,{
+             httpOnly:true,
+             secure:process.env.Node_ENV === "production",
+             sameSite:process.env.Node_ENV === 'production' ? 'none' : 'strict',
+         });
+         return res.json({success:true,message:"Admin Login Successfully"});
    }else{
         return res.json({success:false,message:"Invalid Credentials"});
    }

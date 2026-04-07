@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { AppContext } from '../context/AppContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 const LoginPage = () => {
     const { setIsAuth, setUserData } = useContext(AppContext);
@@ -45,6 +46,30 @@ const LoginPage = () => {
         } catch (error) {
             console.error("Auth error", error);
             toast.error("Something went wrong. Please try again.");
+        }
+    };
+
+    const googleLoginHandler = async (credentialResponse) => {
+        try {
+            const response = await fetch('http://localhost:4000/api/user/google-auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ idToken: credentialResponse.credential })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                setIsAuth(true);
+                setUserData(data.user);
+                toast.success("Authenticated with Google Successfully!");
+                navigate('/');
+            } else {
+                toast.error(data.message || 'Google Auth failed');
+            }
+        } catch (error) {
+            console.error("Google Auth error", error);
+            toast.error("Google Authentication failed");
         }
     };
 
@@ -190,6 +215,22 @@ const LoginPage = () => {
                             >
                                 {state === 'Sign Up' ? "Create Account" : "Login"}
                             </button>
+
+                            <div className="flex items-center gap-4 my-6">
+                                <hr className="flex-1 border-gray-200" />
+                                <span className="text-gray-400 text-xs font-medium uppercase">Or</span>
+                                <hr className="flex-1 border-gray-200" />
+                            </div>
+
+                            <div className="flex justify-center">
+                                <GoogleLogin 
+                                    onSuccess={googleLoginHandler}
+                                    onError={() => toast.error("Google login failed")}
+                                    theme="filled_blue"
+                                    shape="circle"
+                                    width="100%"
+                                />
+                            </div>
                         </div>
                     </form>
 

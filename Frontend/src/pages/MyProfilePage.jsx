@@ -1,20 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import { AppContext } from '../context/AppContext';
+import { toast } from 'react-toastify';
 
 const MyProfilePage = () => {
+    const { userData: contextUserData, checkAuthStatus } = useContext(AppContext);
+    
     const [userData, setUserData] = useState({
-        name: "Richard James",
+        name: "",
         image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200",
-        email: "richardjames@gmail.com",
-        phone: "+91 98765 43210",
+        email: "",
+        phone: "",
         address: {
-            line1: "57th Cross, Richmond block",
-            line2: "Varanasi, Uttar Pradesh, India - 221005",
+            line1: "",
+            line2: "",
         },
         gender: "Male",
-        dob: "1995-05-15",
+        dob: "",
     });
 
     const [isEdit, setIsEdit] = useState(false);
+    const [image, setImage] = useState(false);
+    const [willRemoveImage, setWillRemoveImage] = useState(false);
+
+    useEffect(() => {
+        if (contextUserData) {
+            setUserData({
+                ...userData,
+                ...contextUserData,
+                address: contextUserData.address || { line1: "", line2: "" }
+            });
+            setWillRemoveImage(false);
+        }
+    }, [contextUserData]);
+
+    const updateProfileData = async () => {
+        try {
+            const formData = new FormData();
+            formData.append('name', userData.name);
+            formData.append('phone', userData.phone);
+            formData.append('address', JSON.stringify(userData.address));
+            formData.append('gender', userData.gender);
+            formData.append('dob', userData.dob);
+
+            if (willRemoveImage) {
+                formData.append('removeImage', 'true');
+            } else if (image) {
+                formData.append('image', image);
+            }
+
+            const response = await fetch('http://localhost:4000/api/user/update-profile', {
+                method: 'POST',
+                credentials: 'include',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success(data.message);
+                await checkAuthStatus();
+                setIsEdit(false);
+                setImage(false);
+                setWillRemoveImage(false);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Something went wrong");
+        }
+    }
 
     return (
         <div className="bg-gray-50 min-h-[90vh] py-12 px-4 sm:px-10 lg:px-20">
@@ -47,17 +102,53 @@ const MyProfilePage = () => {
                         
                         <div className="px-6 pb-6 relative text-center">
                             <div className="relative inline-block -mt-16 mb-4">
-                                <img 
-                                    src={userData.image} 
-                                    className="w-32 h-32 rounded-full border-4 border-white object-cover shadow-lg mx-auto" 
-                                    alt="User Profile"
-                                />
+                                <label htmlFor="image" className="cursor-pointer group relative block">
+                                    <img 
+                                        src={willRemoveImage ? 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200' : (image ? URL.createObjectURL(image) : userData.image)} 
+                                        className={`w-32 h-32 rounded-full border-4 border-white object-cover shadow-lg mx-auto ${isEdit ? 'opacity-70 group-hover:opacity-100 transition-opacity' : ''}`} 
+                                        alt="User Profile"
+                                    />
+                                    {isEdit && (
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="bg-black/20 p-2 rounded-full backdrop-blur-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {isEdit && <input type="file" id="image" hidden onChange={(e) => { setImage(e.target.files[0]); setWillRemoveImage(false); }} />}
+                                </label>
                                 {isEdit && (
-                                    <div className="absolute bottom-1 right-1 bg-white p-2 rounded-full shadow-md cursor-pointer border border-gray-100 hover:bg-gray-50">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
+                                    <div className="absolute bottom-1 right-1 flex gap-1">
+                                        <label htmlFor="image" className="bg-white p-2 rounded-full shadow-md cursor-pointer border border-gray-100 hover:bg-gray-50 transition-all hover:scale-110">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                        </label>
+                                        {(userData.image !== 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200' || image) && !willRemoveImage && (
+                                            <button 
+                                                onClick={() => { setWillRemoveImage(true); setImage(false); }}
+                                                className="bg-white p-2 rounded-full shadow-md cursor-pointer border border-gray-100 hover:bg-red-50 transition-all hover:scale-110 group/btn"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500 group-hover/btn:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                        {willRemoveImage && (
+                                            <button 
+                                                onClick={() => setWillRemoveImage(false)}
+                                                className="bg-white p-2 rounded-full shadow-md cursor-pointer border border-gray-100 hover:bg-orange-50 transition-all hover:scale-110 group/btn"
+                                                title="Undo Removal"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                </svg>
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -93,10 +184,7 @@ const MyProfilePage = () => {
                                         Cancel
                                     </button>
                                     <button 
-                                        onClick={() => {
-                                            setIsEdit(false);
-                                            alert("Saved Successfully!");
-                                        }}
+                                        onClick={updateProfileData}
                                         className="w-1/2 py-2.5 rounded-full bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold shadow-md hover:shadow-lg transition-all text-sm"
                                     >
                                         Save Update

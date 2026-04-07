@@ -5,6 +5,20 @@ export const AppContext = createContext();
 const AppContextProvider = (props) => {
     const [isAuth, setIsAuth] = useState(false);
     const [userData, setUserData] = useState(null);
+    const [tours, setTours] = useState([]);
+
+    const getToursData = async () => {
+        try {
+            const response = await fetch('http://localhost:4000/api/product/list');
+            const data = await response.json();
+            
+            if (data.success) {
+                setTours(data.products || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch tours:", error);
+        }
+    }
 
     const checkAuthStatus = async () => {
         try {
@@ -28,6 +42,7 @@ const AppContextProvider = (props) => {
 
     useEffect(() => {
         checkAuthStatus();
+        getToursData();
     }, []);
 
     const value = {
@@ -35,7 +50,9 @@ const AppContextProvider = (props) => {
         setIsAuth,
         userData,
         setUserData,
-        checkAuthStatus
+        checkAuthStatus,
+        tours,
+        getToursData
     };
 
     return (

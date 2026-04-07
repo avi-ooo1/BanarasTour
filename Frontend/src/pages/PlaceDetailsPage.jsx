@@ -1,27 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { topFamousData, templesData, entertainmentData, ghatData, sweetData, foodData, shoppingData } from '../assets/assets';
+import { AppContext } from '../context/AppContext';
 
 const PlaceDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { tours } = useContext(AppContext);
   const [place, setPlace] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!tours || tours.length === 0) return;
+
     setIsLoading(true);
-    const allItems = [
-      ...topFamousData,
-      ...templesData, 
-      ...ghatData, 
-      ...entertainmentData, 
-      ...sweetData, 
-      ...foodData, 
-      ...shoppingData
-    ];
-    // Create unique items based on id
-    const uniqueItems = Array.from(new Map(allItems.map(item => [item.id, item])).values());
-    const foundPlace = uniqueItems.find(item => item.id === String(id));
+    const foundPlace = tours.find(item => String(item._id || item.id) === String(id));
     
     setTimeout(() => {
       setPlace(foundPlace);
@@ -29,7 +21,7 @@ const PlaceDetailsPage = () => {
     }, 400); 
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [id]);
+  }, [id, tours]);
 
   if (isLoading) {
     return (
@@ -101,7 +93,7 @@ const PlaceDetailsPage = () => {
               {/* Decorative quotation mark */}
               <div className="absolute -top-8 -left-6 text-8xl text-gray-200/60 font-serif opacity-50 z-0 select-none">"</div>
               <p className="relative z-10 text-xl sm:text-2xl text-gray-700 font-light leading-relaxed border-l-4 border-indigo-500 pl-6 py-2 bg-gradient-to-r from-gray-50 to-transparent">
-                {place.about}
+                {place.description || place.about}
               </p>
             </div>
 
