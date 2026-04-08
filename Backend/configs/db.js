@@ -14,10 +14,19 @@ const connectDB = async () => {
       throw new Error("MONGODB_URI is not defined in environment variables");
     }
 
+    let uri = process.env.MONGODB_URI.trim();
+    
+    // Remove leading/trailing quotes if they exist
+    if (uri.startsWith('"') && uri.endsWith('"')) {
+      uri = uri.substring(1, uri.length - 1);
+    } else if (uri.startsWith("'") && uri.endsWith("'")) {
+      uri = uri.substring(1, uri.length - 1);
+    }
+
     mongoose.connection.on('connected', () => console.log("Database Connected"));
     mongoose.connection.on('error', (err) => console.error("MongoDB error:", err.message));
 
-    await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
     });
@@ -26,10 +35,14 @@ const connectDB = async () => {
   } catch (error) {
     console.error("MongoDB connection FAILED:", error.message);
     if (process.env.MONGODB_URI) {
-       const maskedUri = process.env.MONGODB_URI.replace(/\/\/.*@/, "//***:***@");
+       const rawUri = process.env.MONGODB_URI;
+       const maskedUri = rawUri.replace(/\/\/.*@/, "//***:***@");
        console.log("Attempted URI (masked):", maskedUri);
+       console.log("URI Length:", rawUri.length);
+       console.log("URI First 10 chars:", rawUri.substring(0, 10));
     }
     isConnected = false;
+    throw error; // Rethrow so middleware can catch it
   }
 }
 
