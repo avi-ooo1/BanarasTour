@@ -3,13 +3,14 @@ import React, { createContext, useState, useEffect } from 'react';
 export const AppContext = createContext();
 
 const AppContextProvider = (props) => {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const [isAuth, setIsAuth] = useState(false);
     const [userData, setUserData] = useState(null);
     const [tours, setTours] = useState([]);
 
     const getToursData = async () => {
         try {
-            const response = await fetch('http://localhost:4000/api/product/list');
+            const response = await fetch(`${backendUrl}/api/product/list`);
             const data = await response.json();
             
             if (data.success) {
@@ -22,7 +23,7 @@ const AppContextProvider = (props) => {
 
     const checkAuthStatus = async () => {
         try {
-            const response = await fetch('http://localhost:4000/api/user/is-auth', {
+            const response = await fetch(`${backendUrl}/api/user/is-auth`, {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -46,6 +47,7 @@ const AppContextProvider = (props) => {
     }, []);
 
     const value = {
+        backendUrl,
         isAuth,
         setIsAuth,
         userData,

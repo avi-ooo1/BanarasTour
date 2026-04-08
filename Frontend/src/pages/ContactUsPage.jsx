@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { toast } from 'react-toastify'
+import { AppContext } from '../context/AppContext'
 
 const ContactUsPage = () => {
-
+    const { backendUrl } = useContext(AppContext);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
@@ -10,7 +11,6 @@ const ContactUsPage = () => {
     const onSubmitHandler = async (e) => {
         e.preventDefault();
         try {
-            const backendUrl = 'http://localhost:4000';
             const response = await fetch(`${backendUrl}/api/contact/submit`, {
                 method: 'POST',
                 headers: {

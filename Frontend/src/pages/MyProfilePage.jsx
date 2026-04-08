@@ -3,7 +3,7 @@ import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 
 const MyProfilePage = () => {
-    const { userData: contextUserData, checkAuthStatus } = useContext(AppContext);
+    const { userData: contextUserData, checkAuthStatus, backendUrl } = useContext(AppContext);
     
     const [userData, setUserData] = useState({
         name: "",
@@ -48,7 +48,7 @@ const MyProfilePage = () => {
                 formData.append('image', image);
             }
 
-            const response = await fetch('http://localhost:4000/api/user/update-profile', {
+            const response = await fetch(`${backendUrl}/api/user/update-profile`, {
                 method: 'POST',
                 credentials: 'include',
                 body: formData

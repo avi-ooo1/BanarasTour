@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { toast } from 'react-toastify';
+import { AppContext } from '../context/AppContext';
 import bookingBanner from '../assets/BookingAssets/BookingBanner.png';
 
 const BookingPage = () => {
+  const { backendUrl } = useContext(AppContext);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -65,7 +67,7 @@ const BookingPage = () => {
           totalAmount,
           payment: paymentVerified,
         };
-        const response = await fetch('http://localhost:4000/api/booking/add', {
+        const response = await fetch(`${backendUrl}/api/booking/add`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -86,7 +88,7 @@ const BookingPage = () => {
 
     if (formData.paymentMethod === 'Online') {
       try {
-        const orderResponse = await fetch('http://localhost:4000/api/payment/razorpay', {
+        const orderResponse = await fetch(`${backendUrl}/api/payment/razorpay`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: totalAmount }),
@@ -104,7 +106,7 @@ const BookingPage = () => {
             order_id: orderData.order.id,
             handler: async function (response) {
               try {
-                const verifyResponse = await fetch('http://localhost:4000/api/payment/verify', {
+                const verifyResponse = await fetch(`${backendUrl}/api/payment/verify`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({

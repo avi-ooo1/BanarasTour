@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
 
 const MyBookingPage = () => {
+  const { backendUrl } = useContext(AppContext);
   const [bookings, setBookings] = useState([]);
 
   React.useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/booking/get', {
+        const response = await fetch(`${backendUrl}/api/booking/get`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

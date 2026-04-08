@@ -5,7 +5,7 @@ import { AppContext } from '../context/AppContext';
 import { GoogleLogin } from '@react-oauth/google';
 
 const LoginPage = () => {
-    const { setIsAuth, setUserData } = useContext(AppContext);
+    const { setIsAuth, setUserData, backendUrl } = useContext(AppContext);
     const navigate = useNavigate();
     const [state, setState] = useState('Login');
     
@@ -22,7 +22,7 @@ const LoginPage = () => {
     const onSubmitHandler = async (event) => {
         event.preventDefault();
         try {
-            const url = state === 'Sign Up' ? 'http://localhost:4000/api/user/register' : 'http://localhost:4000/api/user/login';
+            const url = state === 'Sign Up' ? `${backendUrl}/api/user/register` : `${backendUrl}/api/user/login`;
             
             // Backend register expects: {name, email, password}
             const payload = state === 'Sign Up' ? { name, email, password } : { email, password };
@@ -51,7 +51,7 @@ const LoginPage = () => {
 
     const googleLoginHandler = async (credentialResponse) => {
         try {
-            const response = await fetch('http://localhost:4000/api/user/google-auth', {
+            const response = await fetch(`${backendUrl}/api/user/google-auth`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

@@ -2,10 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
-
 const AdminPanelPage = () => {
-    const { tours, getToursData } = useContext(AppContext);
+    const { tours, getToursData, backendUrl } = useContext(AppContext);
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loginEmail, setLoginEmail] = useState('');

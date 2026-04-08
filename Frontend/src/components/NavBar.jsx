@@ -9,11 +9,11 @@ import { toast } from 'react-toastify';
 function Navbar() {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
-  const { isAuth, setIsAuth, setUserData } = useContext(AppContext);
+  const { isAuth, setIsAuth, setUserData, backendUrl } = useContext(AppContext);
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/user/logout', {
+      const response = await fetch(`${backendUrl}/api/user/logout`, {
         method: 'GET',
         credentials: 'include',
       });
