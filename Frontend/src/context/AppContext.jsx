@@ -9,6 +9,10 @@ const AppContextProvider = (props) => {
     const [tours, setTours] = useState([]);
 
     const getToursData = async () => {
+        if (!backendUrl) {
+            console.error("VITE_BACKEND_URL is not defined in environment variables!");
+            return;
+        }
         try {
             const response = await fetch(`${backendUrl}/api/product/list`);
             const data = await response.json();
@@ -17,11 +21,12 @@ const AppContextProvider = (props) => {
                 setTours(data.products || []);
             }
         } catch (error) {
-            console.error("Failed to fetch tours:", error);
+            console.error("Error fetching tours from:", `${backendUrl}/api/product/list`, error);
         }
     }
 
     const checkAuthStatus = async () => {
+        if (!backendUrl) return;
         try {
             const response = await fetch(`${backendUrl}/api/user/is-auth`, {
                 method: 'GET',
@@ -36,7 +41,7 @@ const AppContextProvider = (props) => {
                 setUserData(null);
             }
         } catch (error) {
-            console.error("Auth check failed:", error);
+            console.error("Auth check failed for:", `${backendUrl}/api/user/is-auth`, error);
             setIsAuth(false);
         }
     };

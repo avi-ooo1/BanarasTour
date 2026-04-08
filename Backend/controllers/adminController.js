@@ -6,11 +6,12 @@ export const adminLogin = async(req,res) =>{
      const {email,password} = req.body;
    if(password === process.env.ADMIN_PASSWORD && email === process.env.ADMIN_EMAIL){
       const token = jwt.sign({email},process.env.JWT_SECRET,{expiresIn : '24h'});
-       res.cookie('adminToken',token,{
-             httpOnly:true,
-             secure:process.env.NODE_ENV === "production",
-             sameSite:process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-         });
+        res.cookie('adminToken', token, {
+              httpOnly: true,
+              secure: true,
+              sameSite: 'none',
+              maxAge: 24 * 60 * 60 * 1000
+          });
          return res.json({success:true,message:"Admin Login Successfully"});
    }else{
         return res.json({success:false,message:"Invalid Credentials"});
@@ -34,10 +35,10 @@ export const isAdminAuth = async(req,res) =>{
 //Logout Admin : api/admin/logout
 export const adminLogout = async (req,res) =>{
     try {
-        res.clearCookie('adminToken',{
-            httpOnly:true,
-            secure : process.env.NODE_ENV === "production",
-            sameSite:process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+        res.clearCookie('adminToken', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none'
         })
         return res.json({success:true,message:"Logged out successfully"});
     } catch (error) {

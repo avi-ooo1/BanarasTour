@@ -24,12 +24,14 @@ export const register = async (req,res) =>{
        const user = await User.create({name,email,password:hashedPassword});
        const token = jwt.sign({id:user._id},process.env.JWT_SECRET,{expiresIn:"7d"});
        
-       res.cookie('token',token,{
-        httpOnly : true,
-        secure:process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+       const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" || true, // Force secure on Render
+        sameSite: 'none', // Required for cross-site cookies on Render
         maxAge: 7 * 24 * 60 * 60 * 1000
-       });
+       };
+
+       res.cookie('token', token, cookieOptions);
 
        return res.json({success:true, user:{email:user.email, name:user.name}})
 
@@ -59,12 +61,14 @@ export const login = async (req,res) =>{
 
         const token = jwt.sign({id:user._id},process.env.JWT_SECRET,{expiresIn:"7d"});
 
-        res.cookie('token',token,{
-            httpOnly:true,
-            secure:process.env.NODE_ENV === "production",
-            sameSite:process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-            maxAge:7 * 24 * 60 * 60 * 1000
-        });
+        const cookieOptions = {
+            httpOnly: true,
+            secure: true, // Render is always HTTPS
+            sameSite: 'none',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        };
+
+        res.cookie('token', token, cookieOptions);
 
         return res.json({success:true,user:{email:user.email,name:user.name}});
 
@@ -90,10 +94,10 @@ export const isAuth = async(req,res) =>{
 //Logout User : api/user/logout
 export const userLogout = async (req,res) =>{
     try {
-        res.clearCookie('token',{
-            httpOnly:true,
-            secure : process.env.NODE_ENV === "production",
-            sameSite:process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none'
         })
         return res.json({success:true,message:"Logged out successfully"});
     } catch (error) {
@@ -121,8 +125,8 @@ export const googleAuth = async (req, res) => {
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
         return res.json({ success: true, user: { email: user.email, name: user.name } });

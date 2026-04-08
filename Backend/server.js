@@ -16,6 +16,9 @@ import contactRouter from "./routes/contactRoutes.js";
 const app = express();
 const port = process.env.PORT || 4000;
 
+// Trust the first proxy (Render uses a proxy)
+app.set('trust proxy', 1);
+
 
 connectDB();
 connectCloudinary();
