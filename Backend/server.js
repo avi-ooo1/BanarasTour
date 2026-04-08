@@ -26,8 +26,7 @@ connectCloudinary();
 //allow multiple origin
 const allowOrigin = [
   "http://localhost:5173",
-  "https://banaras-tour.vercel.app",
-  "https://banarastour-backend.vercel.app"
+  "https://banaras-tour.vercel.app"
 ].filter(Boolean);
 
 const corsOptions = {
