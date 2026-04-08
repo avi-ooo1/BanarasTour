@@ -3,14 +3,17 @@ import React, { createContext, useState, useEffect } from 'react';
 export const AppContext = createContext();
 
 const AppContextProvider = (props) => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    let rawBackendUrl = import.meta.env.VITE_BACKEND_URL;
+    // Remove trailing slash if exists
+    const backendUrl = rawBackendUrl ? rawBackendUrl.replace(/\/$/, "") : "";
+
     const [isAuth, setIsAuth] = useState(false);
     const [userData, setUserData] = useState(null);
     const [tours, setTours] = useState([]);
 
     const getToursData = async () => {
         if (!backendUrl) {
-            console.error("VITE_BACKEND_URL is not defined in environment variables!");
+            console.error("VITE_BACKEND_URL is missing! Please set it in your environment variables.");
             return;
         }
         console.log("Fetching tours from:", `${backendUrl}/api/product/list`);

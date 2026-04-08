@@ -33,9 +33,20 @@ const allowOrigin = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowOrigin.includes(origin)) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const isAllowed = allowOrigin.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return allowed === origin;
+    });
+
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.error(`CORS Error: Origin ${origin} not allowed.`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -54,9 +65,23 @@ app.options(/^(.*)$/, cors(corsOptions));
 
 
 
+// Middleware to ensure DB is connected before processing requests
+const ensureDB = async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("DB Connection Middleware Error:", err.message);
+    res.status(500).send("Database Connection Error");
+  }
+};
+
 app.get('/',(req,res)=>{
     res.send("API is Working");
 })
+
+// Apply ensureDB middleware to all api routes
+app.use("/api", ensureDB);
 
 //User Routes
 app.use("/api/user",userRouter);
