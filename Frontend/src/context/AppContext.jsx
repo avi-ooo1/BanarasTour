@@ -20,12 +20,13 @@ const AppContextProvider = (props) => {
         try {
             const response = await fetch(`${backendUrl}/api/product/list`);
             const data = await response.json();
+            console.log("Backend Response:", data);
             
             if (data.success) {
                 setTours(data.products || []);
             }
         } catch (error) {
-            console.error("Error fetching tours from:", `${backendUrl}/api/product/list`, error);
+            console.error("Error fetching tours:", error);
         }
     }
 
