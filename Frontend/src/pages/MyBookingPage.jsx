@@ -79,17 +79,17 @@ const MyBookingPage = () => {
                 className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-300 relative"
               >
                 {/* Status Badge - Top Right */}
-                <div className="absolute top-6 right-6 lg:top-8 lg:right-8">
+                <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10">
                   <span 
-                    className={`inline-flex items-center px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full shadow-sm bg-gray-50 ${
-                      booking.status === 'Upcoming' 
+                    className={`inline-flex items-center px-2.5 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-full shadow-sm bg-gray-50/90 backdrop-blur-sm ${
+                      booking.status === 'Upcoming' || booking.status === 'Completed' || booking.status === 'BOOKING PLACED'
                         ? 'text-green-600 border border-green-200' 
                         : booking.status === 'Cancelled'
                           ? 'text-red-600 border border-red-200'
                           : 'text-gray-600 border border-gray-200'
                     }`}
                   >
-                    {booking.status === 'Upcoming' && <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>}
+                    {(booking.status === 'Upcoming' || booking.status === 'Completed' || booking.status === 'BOOKING PLACED') && <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>}
                     {booking.status === 'Cancelled' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>}
                     {booking.status}
                   </span>
@@ -98,9 +98,9 @@ const MyBookingPage = () => {
                 {/* Details Section */}
                 <div className="p-6 md:p-8 flex-1 flex flex-col justify-between">
                   <div className="flex flex-col mb-4">
-                    <div className="mb-4 pr-32">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-1">{booking.tourTitle}</h2>
-                      <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                    <div className="mb-4 pr-24 sm:pr-32">
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 leading-tight">{booking.tourTitle}</h2>
+                      <p className="text-xs sm:text-sm font-medium text-gray-500 flex items-center gap-1">
                         <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -108,28 +108,28 @@ const MyBookingPage = () => {
                       </p>
                     </div>
                     <div className="text-left">
-                      <p className="text-2xl font-bold text-orange-600">₹{booking.totalAmount.toLocaleString()}</p>
-                      <p className="text-xs font-medium text-gray-400 mt-1 uppercase tracking-wider">{booking.paymentStatus}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-orange-600">₹{booking.totalAmount.toLocaleString()}</p>
+                      <p className="text-[10px] sm:text-xs font-medium text-gray-400 mt-1 uppercase tracking-wider">{booking.paymentStatus}</p>
                     </div>
                   </div>
 
                   <div className="border-t border-gray-100 my-4"></div>
 
                   {/* Summary Footer */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
-                    <div>
-                      <span className="block text-gray-400 font-medium text-xs uppercase mb-1">Booking ID</span>
-                      <span className="font-semibold text-gray-800">{booking.id}</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-gray-600">
+                    <div className="overflow-hidden">
+                      <span className="block text-gray-400 font-medium text-[10px] sm:text-xs uppercase mb-1">Booking ID</span>
+                      <span className="block font-semibold text-gray-800 break-all text-xs sm:text-sm">{booking.id}</span>
                     </div>
                     <div>
-                      <span className="block text-gray-400 font-medium text-xs uppercase mb-1">Guests</span>
-                      <span className="font-semibold text-gray-800">{booking.guests} Person{booking.guests > 1 ? 's' : ''}</span>
+                      <span className="block text-gray-400 font-medium text-[10px] sm:text-xs uppercase mb-1">Guests</span>
+                      <span className="font-semibold text-gray-800 text-sm">{booking.guests} Person{booking.guests > 1 ? 's' : ''}</span>
                     </div>
-                    <div className="col-span-2 lg:col-span-2">
-                      <span className="block text-gray-400 font-medium text-xs uppercase mb-1">Vehicles Selected</span>
+                    <div className="sm:col-span-2 lg:col-span-2">
+                      <span className="block text-gray-400 font-medium text-[10px] sm:text-xs uppercase mb-1">Vehicles Selected</span>
                       <div className="flex flex-wrap gap-2">
                         {booking.cars.map((car, idx) => (
-                          <span key={idx} className="inline-flex items-center px-2 py-1 bg-gray-50 border border-gray-200 rounded text-xs font-medium text-gray-700">
+                          <span key={idx} className="inline-flex items-center px-2 py-1 bg-gray-50 border border-gray-200 rounded text-[10px] sm:text-xs font-medium text-gray-700">
                             {car.quantity}x {car.type}
                           </span>
                         ))}
