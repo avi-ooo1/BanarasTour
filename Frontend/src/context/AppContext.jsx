@@ -10,6 +10,7 @@ const AppContextProvider = (props) => {
     const [isAuth, setIsAuth] = useState(false);
     const [userData, setUserData] = useState(null);
     const [tours, setTours] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const getToursData = async () => {
         if (!backendUrl) {
@@ -64,7 +65,9 @@ const AppContextProvider = (props) => {
         setUserData,
         checkAuthStatus,
         tours,
-        getToursData
+        getToursData,
+        searchTerm,
+        setSearchTerm
     };
 
     return (

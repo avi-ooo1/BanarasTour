@@ -6,19 +6,32 @@ const TourPage = () => {
 
     const { speciality } = useParams();
     const navigate = useNavigate();
-    const { tours } = useContext(AppContext);
+    const { tours, searchTerm } = useContext(AppContext);
     const [displayData, setDisplayData] = useState([]);
 
     useEffect(() => {
         if (!tours || tours.length === 0) return;
 
+        let filtered = tours;
+
+        // Apply category filter
         if (speciality) {
-            const filtered = tours.filter(item => item.category === speciality);
-            setDisplayData(filtered);
-        } else {
-            setDisplayData(tours);
+            filtered = filtered.filter(item => item.category === speciality);
         }
-    }, [speciality, tours]);
+
+        // Apply search filter
+        if (searchTerm) {
+            const query = searchTerm.toLowerCase().trim();
+            filtered = filtered.filter(item => 
+                (item.name && item.name.toLowerCase().includes(query)) || 
+                (item.category && item.category.toLowerCase().includes(query)) ||
+                (item.description && item.description.toLowerCase().includes(query)) ||
+                (item.about && item.about.toLowerCase().includes(query))
+            );
+        }
+
+        setDisplayData(filtered);
+    }, [speciality, tours, searchTerm]);
 
   return (
     <div>

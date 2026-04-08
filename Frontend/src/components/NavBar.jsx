@@ -9,7 +9,15 @@ import { toast } from 'react-toastify';
 function Navbar() {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
-  const { isAuth, setIsAuth, setUserData, backendUrl } = useContext(AppContext);
+  const { isAuth, setIsAuth, setUserData, backendUrl, searchTerm, setSearchTerm } = useContext(AppContext);
+
+  const handleSearch = (e) => {
+    if (e) e.preventDefault();
+    if (searchTerm.trim() || !searchTerm) {
+      navigate('/tour');
+      setShowMenu(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -50,10 +58,17 @@ function Navbar() {
       {/* Mobile Search Bar & Profile (Compact, Visible on Front) */}
       <div className='flex md:hidden flex-1 justify-center items-center gap-3 px-2'>
         <div className="flex items-center border pl-3 gap-1  bg-white border-gray-500/30 h-9 rounded-full overflow-hidden w-full max-w-[180px] sm:max-w-xs">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 30 30" fill="#6B7280">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 30 30" fill="#6B7280" onClick={handleSearch} className="cursor-pointer">
             <path d="M13 3C7.489 3 3 7.489 3 13s4.489 10 10 10a9.95 9.95 0 0 0 6.322-2.264l5.971 5.971a1 1 0 1 0 1.414-1.414l-5.97-5.97A9.95 9.95 0 0 0 23 13c0-5.511-4.489-10-10-10m0 2c4.43 0 8 3.57 8 8s-3.57 8-8 8-8-3.57-8-8 3.57-8 8-8" />
           </svg>
-          <input type="text" placeholder="Search..." className="w-full h-full outline-none text-xs text-gray-500 bg-transparent" />
+          <input 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            type="text" 
+            placeholder="Search..." 
+            className="w-full h-full outline-none text-xs text-gray-500 bg-transparent" 
+          />
         </div>
         <div>
           
@@ -62,13 +77,19 @@ function Navbar() {
 
       {/* Desktop Search Bar */}
       <div className='hidden md:flex flex-1 justify-center px-4 lg:px-20'>
-        <div className="flex items-center border pl-4 gap-2 bg-white border-gray-500/30 h-[46px] rounded-full overflow-hidden w-full max-w-md">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 30 30" fill="#6B7280">
+        <form onSubmit={handleSearch} className="flex items-center border pl-4 gap-2 bg-white border-gray-500/30 h-[46px] rounded-full overflow-hidden w-full max-w-md">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 30 30" fill="#6B7280" className='cursor-pointer' onClick={handleSearch}>
             <path d="M13 3C7.489 3 3 7.489 3 13s4.489 10 10 10a9.95 9.95 0 0 0 6.322-2.264l5.971 5.971a1 1 0 1 0 1.414-1.414l-5.97-5.97A9.95 9.95 0 0 0 23 13c0-5.511-4.489-10-10-10m0 2c4.43 0 8 3.57 8 8s-3.57 8-8 8-8-3.57-8-8 3.57-8 8-8" />
           </svg>
-          <input type="text" placeholder="Search..." className="w-full h-full outline-none text-sm text-gray-500 bg-transparent" />
-          <button type="button" className="bg-gray-500 h-9 px-6 rounded-full text-sm text-white mr-[5px] hover:bg-gray-600 transition-colors">Search</button>
-        </div>
+          <input 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            type="text" 
+            placeholder="Search tours..." 
+            className="w-full h-full outline-none text-sm text-gray-500 bg-transparent" 
+          />
+          <button type="submit" className="bg-gray-500 h-9 px-6 rounded-full text-sm text-white mr-[5px] hover:bg-gray-600 transition-colors">Search</button>
+        </form>
       </div>
 
       {/* Desktop Navigation Links */}
