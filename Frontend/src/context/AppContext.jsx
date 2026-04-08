@@ -13,6 +13,7 @@ const AppContextProvider = (props) => {
             console.error("VITE_BACKEND_URL is not defined in environment variables!");
             return;
         }
+        console.log("Fetching tours from:", `${backendUrl}/api/product/list`);
         try {
             const response = await fetch(`${backendUrl}/api/product/list`);
             const data = await response.json();
