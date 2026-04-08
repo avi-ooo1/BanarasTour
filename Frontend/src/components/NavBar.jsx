@@ -48,31 +48,27 @@ function Navbar() {
       {/* Logo and Title */}
       <div className="flex items-center gap-2 cursor-pointer flex-shrink-0" onClick={() => navigate('/')}>
         <img
-          className="w-10 h-10 md:w-12 md:h-12 object-contain"
+          className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-contain"
           src={logo}
           alt="Logo"
         />
-        <h1 className="sm:block text-xl md:text-2xl font-bold text-gray-700">BANARAS TOUR</h1>
+        <h1 className="text-sm sm:text-xl md:text-2xl font-bold text-gray-700 whitespace-nowrap">BANARAS TOUR</h1>
       </div>
 
       {/* Mobile Search Bar & Profile (Compact, Visible on Front) */}
-      <div className='flex md:hidden flex-1 justify-center items-center gap-3 px-2'>
-        <div className="flex items-center border pl-3 gap-1  bg-white border-gray-500/30 h-9 rounded-full overflow-hidden w-full max-w-[180px] sm:max-w-xs">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 30 30" fill="#6B7280" onClick={handleSearch} className="cursor-pointer">
+      <div className='flex md:hidden flex-1 justify-center items-center gap-2 px-1'>
+        <form onSubmit={handleSearch} className="flex items-center border pl-2 gap-1 bg-white border-gray-500/30 h-10 rounded-full overflow-hidden w-full">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 30 30" fill="#6B7280" onClick={handleSearch} className="cursor-pointer shrink-0">
             <path d="M13 3C7.489 3 3 7.489 3 13s4.489 10 10 10a9.95 9.95 0 0 0 6.322-2.264l5.971 5.971a1 1 0 1 0 1.414-1.414l-5.97-5.97A9.95 9.95 0 0 0 23 13c0-5.511-4.489-10-10-10m0 2c4.43 0 8 3.57 8 8s-3.57 8-8 8-8-3.57-8-8 3.57-8 8-8" />
           </svg>
           <input 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             type="text" 
-            placeholder="Search..." 
-            className="w-full h-full outline-none text-xs text-gray-500 bg-transparent" 
+            placeholder="Search tours..." 
+            className="w-full h-full outline-none text-sm text-gray-500 bg-transparent min-w-0" 
           />
-        </div>
-        <div>
-          
-        </div>
+        </form>
       </div>
 
       {/* Desktop Search Bar */}
