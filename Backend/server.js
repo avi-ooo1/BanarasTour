@@ -26,14 +26,29 @@ connectCloudinary();
 //allow multiple origin
 const allowOrigin = [
   "http://localhost:5173",
-  "https://banaras-tour.vercel.app"
+  "https://banaras-tour.vercel.app",
+  "https://banarastour-backend.vercel.app"
 ].filter(Boolean);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowOrigin.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
 //Middleware configuration
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
-app.use(cors({origin: allowOrigin,credentials: true}));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight requests
 
 
 
