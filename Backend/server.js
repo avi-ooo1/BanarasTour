@@ -26,7 +26,7 @@ connectCloudinary();
 //allow multiple origin
 const allowOrigin = [
   "http://localhost:5173",
-  process.env.FRONTEND_URL
+  "https://banaras-tour.vercel.app"
 ].filter(Boolean);
 
 //Middleware configuration
