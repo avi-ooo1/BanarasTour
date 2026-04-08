@@ -8,8 +8,8 @@ export const adminLogin = async(req,res) =>{
       const token = jwt.sign({email},process.env.JWT_SECRET,{expiresIn : '24h'});
        res.cookie('adminToken',token,{
              httpOnly:true,
-             secure:process.env.Node_ENV === "production",
-             sameSite:process.env.Node_ENV === 'production' ? 'none' : 'strict',
+             secure:process.env.NODE_ENV === "production",
+             sameSite:process.env.NODE_ENV === 'production' ? 'none' : 'strict',
          });
          return res.json({success:true,message:"Admin Login Successfully"});
    }else{
@@ -36,8 +36,8 @@ export const adminLogout = async (req,res) =>{
     try {
         res.clearCookie('adminToken',{
             httpOnly:true,
-            secure : process.env.Node_ENV === "production",
-            sameSite:process.env.Node_ENV === 'production' ? 'none' : 'strict'
+            secure : process.env.NODE_ENV === "production",
+            sameSite:process.env.NODE_ENV === 'production' ? 'none' : 'strict'
         })
         return res.json({success:true,message:"Logged out successfully"});
     } catch (error) {

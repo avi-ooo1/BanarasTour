@@ -21,7 +21,11 @@ connectDB();
 connectCloudinary();
 
 //allow multiple origin
-const allowOrigin = ["http://localhost:5173"];
+const allowOrigin = [
+  "http://localhost:5173",
+  "https://banarastour.onrender.com",
+  process.env.FRONTEND_URL
+].filter(Boolean);
 
 //Middleware configuration
 app.use(express.json());
