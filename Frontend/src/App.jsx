@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Navbar from './components/NavBar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import MyBookingPage from './pages/MyBookingPage';
 
 // Lazy loaded pages
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -14,7 +15,6 @@ const ContactUsPage = lazy(() => import('./pages/ContactUsPage'));
 const TourPage = lazy(() => import('./pages/TourPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const BookingPage = lazy(() => import('./pages/BookingPage'));
-const MyBookingPage = lazy(() => import('./pages/MyBookingPage'));
 const MyProfilePage = lazy(() => import('./pages/MyProfilePage'));
 const PlaceDetailsPage = lazy(() => import('./pages/PlaceDetailsPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
