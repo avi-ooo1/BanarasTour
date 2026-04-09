@@ -124,6 +124,7 @@ const PlaceDetailsPage = () => {
                   <img 
                     src={place.image} 
                     alt={place.name} 
+                    loading="lazy"
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" 
                   />
                 </div>
@@ -176,6 +177,7 @@ const PlaceDetailsPage = () => {
                   scrolling="no" 
                   marginHeight="0" 
                   marginWidth="0" 
+                  loading="lazy"
                   className="w-full h-full grayscale-[50%] hover:grayscale-0 transition-all duration-500"
                   src={freeMapSrc}
                 ></iframe>

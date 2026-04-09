@@ -13,7 +13,7 @@ function SpecialityMenu() {
             <div className='flex sm:justify-center gap-4 md:gap-10 lg:gap-16  pt-5 w-full overflow-scroll'>
                 {specialityData.map((item, index) => (
                     <Link onClick={()=>scrollTo(0,0)} className='text-center flex flex-col items-center text-xs cursor-pointer flex-shrink-0 hover:translate-y-[-10px] transition-all duration-500 ' key={index} to={`/tour/${item.speciality}`}>
-                        <img className='w-24 h-24 ' src={item.image} alt={item.speciality} />
+                        <img loading="lazy" className='w-24 h-24 ' src={item.image} alt={item.speciality} />
                         <p>{item.speciality}</p>
                     </Link>
 

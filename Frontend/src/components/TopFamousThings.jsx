@@ -22,7 +22,7 @@ const TopFamousThings = () => {
             onClick={() => navigate(`/place/${item._id || item.id}`)}
             className="w-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 cursor-pointer hover:translate-y-[-10px] transition-all duration-500"
           >
-            <img className="h-[200px] w-full object-cover" src={item.image} alt={item.name} />
+            <img loading="lazy" className="h-[200px] w-full object-cover" src={item.image} alt={item.name} />
             <div className="p-4">
               <h5 className="text-xl font-semibold tracking-tight text-gray-900 mb-2 text-center">{item.name}</h5>
               <p className="text-sm text-gray-600 leading-relaxed text-center line-clamp-2">{item.description || item.about}</p>
