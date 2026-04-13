@@ -432,6 +432,12 @@ const AdminPanelPage = () => {
                                             <h3 className="text-lg font-bold text-gray-800">{booking.name} <span className="text-sm font-normal text-gray-500">({booking.email})</span></h3>
                                             <p className="text-gray-600 text-sm">Date: <span className="font-semibold">{booking.date}</span> | Guests: <span className="font-semibold">{booking.guests}</span></p>
                                             <p className="text-gray-600 text-sm">Total: <span className="font-bold text-gray-900">₹{booking.totalAmount}</span> | Status: <span className={`font-bold ${booking.status === 'Cancelled' ? 'text-red-500' : booking.status === 'Completed' ? 'text-green-500' : 'text-blue-500'}`}>{booking.status}</span></p>
+                                            {booking.status === 'Cancelled' && booking.cancelReason && (
+                                                <div className="mt-2 p-2 bg-red-50 rounded border border-red-100 text-sm">
+                                                    <span className="font-bold text-red-700">Reason: </span><span className="text-red-600">{booking.cancelReason}</span>
+                                                    {booking.cancelComment && <p className="text-red-500 text-xs italic mt-1 pb-1">"{booking.cancelComment}"</p>}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex flex-col gap-2 justify-center min-w-[150px]">
                                             <select 

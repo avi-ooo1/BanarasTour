@@ -158,7 +158,7 @@ export const checkAvailability = async (req, res) => {
 // User: Cancel Booking : api/booking/cancel
 export const cancelBooking = async (req, res) => {
     try {
-        const { id } = req.body;
+        const { id, reason, comment } = req.body;
         const booking = await Booking.findById(id);
         if (!booking) return res.json({ success: false, message: "Booking not found" });
 
@@ -175,7 +175,11 @@ export const cancelBooking = async (req, res) => {
             return res.json({ success: false, message: `Booking is already ${booking.status}` });
         }
 
-        await Booking.findByIdAndUpdate(id, { status: 'Cancelled' });
+        await Booking.findByIdAndUpdate(id, { 
+            status: 'Cancelled',
+            cancelReason: reason || 'Not provided',
+            cancelComment: comment || ''
+        });
         res.json({ success: true, message: "Booking Cancelled Successfully" });
     } catch (error) {
         res.json({ success: false, message: error.message });
