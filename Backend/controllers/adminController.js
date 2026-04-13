@@ -12,7 +12,7 @@ export const adminLogin = async(req,res) =>{
               sameSite: 'none',
               maxAge: 24 * 60 * 60 * 1000
           });
-         return res.json({success:true,message:"Admin Login Successfully"});
+         return res.json({success:true, token, message:"Admin Login Successfully"});
    }else{
         return res.json({success:false,message:"Invalid Credentials"});
    }

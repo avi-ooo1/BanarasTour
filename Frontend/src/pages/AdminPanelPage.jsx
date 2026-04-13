@@ -28,7 +28,13 @@ const AdminPanelPage = () => {
 
     const checkAuth = async () => {
         try {
-            const res = await fetch(`${backendUrl}/api/admin/is-auth`, { credentials: 'include' });
+            const adminToken = localStorage.getItem('adminToken');
+            const res = await fetch(`${backendUrl}/api/admin/is-auth`, { 
+                headers: {
+                    ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
+                },
+                credentials: 'include' 
+            });
             const data = await res.json();
             if (data.success) {
                 setIsAuthenticated(true);
@@ -49,6 +55,7 @@ const AdminPanelPage = () => {
             });
             const data = await res.json();
             if (data.success) {
+                if(data.token) localStorage.setItem('adminToken', data.token);
                 setIsAuthenticated(true);
                 toast.success("Admin Logged In");
             } else {
@@ -61,21 +68,33 @@ const AdminPanelPage = () => {
 
     const handleLogout = async () => {
         try {
-            const res = await fetch(`${backendUrl}/api/admin/logout`, { credentials: 'include' });
+            const adminToken = localStorage.getItem('adminToken');
+            const res = await fetch(`${backendUrl}/api/admin/logout`, { 
+                headers: {
+                    ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
+                },
+                credentials: 'include' 
+            });
             const data = await res.json();
             if (data.success) {
+                localStorage.removeItem('adminToken');
                 setIsAuthenticated(false);
             }
         } catch (error) {
             console.error("Logout failed:", error);
+            localStorage.removeItem('adminToken');
+            setIsAuthenticated(false);
         }
     };
 
     const fetchBookings = async () => {
         try {
-            // Note: In real app, pass admin token in headers
+            const adminToken = localStorage.getItem('adminToken');
             const res = await fetch(`${backendUrl}/api/booking/all`, {
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
+                },
                 credentials: 'include'
             });
             const data = await res.json();
@@ -97,8 +116,12 @@ const AdminPanelPage = () => {
         if (image) formData.append('images', image);
 
         try {
+            const adminToken = localStorage.getItem('adminToken');
             const res = await fetch(`${backendUrl}/api/product/add`, {
                 method: 'POST',
+                headers: {
+                    ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
+                },
                 body: formData,
                 credentials: 'include'
             });
@@ -118,9 +141,13 @@ const AdminPanelPage = () => {
     const handleDeleteTour = async (id) => {
         if (!window.confirm("Are you sure you want to delete this tour?")) return;
         try {
+            const adminToken = localStorage.getItem('adminToken');
             const res = await fetch(`${backendUrl}/api/product/remove`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
+                },
                 body: JSON.stringify({ id }),
                 credentials: 'include'
             });
@@ -138,9 +165,13 @@ const AdminPanelPage = () => {
 
     const handleUpdateBookingStatus = async (id, status) => {
         try {
+            const adminToken = localStorage.getItem('adminToken');
             const res = await fetch(`${backendUrl}/api/booking/status`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
+                },
                 body: JSON.stringify({ id, status }),
                 credentials: 'include'
             });
@@ -159,9 +190,13 @@ const AdminPanelPage = () => {
     const handleDeleteBooking = async (id) => {
         if (!window.confirm("Delete this booking order entirely?")) return;
         try {
+            const adminToken = localStorage.getItem('adminToken');
             const res = await fetch(`${backendUrl}/api/booking/remove`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
+                },
                 body: JSON.stringify({ id }),
                 credentials: 'include'
             });

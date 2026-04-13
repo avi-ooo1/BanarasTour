@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 const authAdmin = async(req,res,next) =>{
-    const {adminToken} = req.cookies;
+    const adminToken = req.cookies.adminToken || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
     if(!adminToken){
         return res.json({success:false,message:"Not Authorized"});
     }
