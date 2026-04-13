@@ -327,7 +327,7 @@ const BookingPage = () => {
                       value={formData.name}
                       onChange={handleChange}
                       className="py-3 px-4 block w-full shadow-sm focus:ring-orange-500 focus:border-orange-500 border-gray-300 rounded-lg border bg-gray-50"
-                      placeholder="John Doe"
+                      placeholder="Avinash Saini"
                     />
                   </div>
 
@@ -341,7 +341,7 @@ const BookingPage = () => {
                       value={formData.email}
                       onChange={handleChange}
                       className="py-3 px-4 block w-full shadow-sm focus:ring-orange-500 focus:border-orange-500 border-gray-300 rounded-lg border bg-gray-50"
-                      placeholder="john@example.com"
+                      placeholder="avi@gmail.com"
                     />
                   </div>
                 </div>
@@ -358,7 +358,7 @@ const BookingPage = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       className="py-3 px-4 block w-full shadow-sm focus:ring-orange-500 focus:border-orange-500 border-gray-300 rounded-lg border bg-gray-50"
-                      placeholder="+91 9876543210"
+                      placeholder="+91 6386522694"
                     />
                   </div>
 
