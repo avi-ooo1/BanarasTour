@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 
 const authUser = (req,res,next) =>{
-    // Extract token from cookie OR from Authorization header (Bearer token)
-    const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+    // Extract token ONLY from Authorization header (Bearer token) to avoid ghost cookie issues
+    const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
     if(!token){
         return res.json({success:false, message:"Not Authorized"})
     }
