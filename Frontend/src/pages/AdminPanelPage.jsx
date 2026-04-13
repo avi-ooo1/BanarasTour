@@ -106,7 +106,8 @@ const AdminPanelPage = () => {
             });
             const data = await res.json();
             if (data.success) {
-                setBookings(data.bookings || []);
+                const reversed = [...(data.bookings || [])].reverse();
+                setBookings(reversed);
             } else if (data.message === "Not Authorized") {
                 setIsAuthenticated(false);
             }
@@ -462,10 +463,10 @@ const AdminPanelPage = () => {
                                         <div className="flex-1 space-y-2">
                                             <div className="flex items-center gap-3">
                                                 <span className="bg-orange-100 text-orange-700 font-bold px-3 py-1 rounded-full text-xs">Order #{booking._id?.slice(-6) || idx}</span>
-                                                <span className="text-sm font-medium text-gray-500">{new Date(booking.createdAt || Date.now()).toLocaleDateString()}</span>
+                                                <span className="text-sm font-medium text-gray-500">Booked On: {new Date(booking.createdAt || Date.now()).toLocaleDateString()}</span>
                                             </div>
                                             <h3 className="text-lg font-bold text-gray-800">{booking.name} <span className="text-sm font-normal text-gray-500">({booking.email})</span></h3>
-                                            <p className="text-gray-600 text-sm">Date: <span className="font-semibold">{booking.date}</span> | Guests: <span className="font-semibold">{booking.guests}</span></p>
+                                            <p className="text-gray-600 text-sm">Tour Date: <span className="font-semibold text-gray-900">{booking.date}</span> | Guests: <span className="font-semibold">{booking.guests}</span></p>
                                             <p className="text-gray-600 text-sm">Total: <span className="font-bold text-gray-900">₹{booking.totalAmount}</span> | Status: <span className={`font-bold ${booking.status === 'Cancelled' ? 'text-red-500' : booking.status === 'Completed' ? 'text-green-500' : 'text-blue-500'}`}>{booking.status}</span></p>
                                             {booking.status === 'Cancelled' && booking.cancelReason && (
                                                 <div className="mt-2 p-2 bg-red-50 rounded border border-red-100 text-sm">

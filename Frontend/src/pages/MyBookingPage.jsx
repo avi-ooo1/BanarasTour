@@ -44,6 +44,7 @@ const MyBookingPage = () => {
             cancelReason: b.cancelReason || '',
             cancelComment: b.cancelComment || '',
             cancelledBy: b.cancelledBy || '',
+            bookingDate: new Date(b.createdAt || Date.now()).toLocaleDateString(),
           }));
           setBookings(formattedBookings.reverse()); // latest first
         }
@@ -179,8 +180,9 @@ const MyBookingPage = () => {
                         <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        {booking.date}
+                        Tour Date: {booking.date}
                       </p>
+                      <p className="text-[10px] sm:text-xs font-medium text-gray-400 mt-1">Booked On: {booking.bookingDate}</p>
                     </div>
                     <div className="text-left">
                       <p className="text-xl sm:text-2xl font-bold text-orange-600">₹{booking.totalAmount.toLocaleString()}</p>
