@@ -2,8 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 
@@ -407,7 +407,7 @@ const MyBookingPage = () => {
     
     tableData.unshift(['Base Tour Package (Guide + Entry)', '-', '-', '-', 'Rs 2,000']);
     
-    doc.autoTable({
+    autoTable(doc, {
         startY: lineY1 + 35,
         head: [['Service / Vehicle', 'Type', 'Qty', 'Unit Price', 'Total']],
         body: tableData,
