@@ -15,6 +15,13 @@ const BookingPage = () => {
     paymentMethod: 'Online',
   });
 
+  // Date Constraints: Prevent past dates, limit to 1 month in the future
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
+  const nextMonth = new Date();
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  const maxDate = nextMonth.toISOString().split('T')[0];
+
   const getPriceFromType = (carType) => {
     return carType.includes('1200') ? 1200 : carType.includes('2000') ? 2000 : carType.includes('2500') ? 2500 : carType.includes('3000') ? 3000 : carType.includes('3500') ? 3500 : 1500;
   };
@@ -305,6 +312,8 @@ const BookingPage = () => {
                       name="date"
                       id="date"
                       required
+                      min={minDate}
+                      max={maxDate}
                       value={formData.date}
                       onChange={handleChange}
                       className={`py-3 px-4 block w-full shadow-sm focus:ring-orange-500 focus:border-orange-500 border-gray-300 rounded-lg border bg-gray-50 ${!formData.date ? 'text-gray-500' : 'text-gray-900'}`}
