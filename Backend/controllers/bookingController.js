@@ -11,7 +11,7 @@ export const addBooking = async(req,res)=>{
         if (bookingData.selectedCars && Array.isArray(bookingData.selectedCars)) {
             const requestedCars = bookingData.selectedCars.reduce((sum, car) => sum + (Number(car.quantity) || 0), 0);
             
-            const existingBookings = await Booking.find({ date: bookingData.date });
+            const existingBookings = await Booking.find({ date: bookingData.date, status: { $ne: 'Cancelled' } });
             let alreadyBooked = 0;
             existingBookings.forEach(b => {
                 if (b.selectedCars && Array.isArray(b.selectedCars)) {

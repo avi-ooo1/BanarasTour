@@ -239,13 +239,7 @@ const MyBookingPage = () => {
                       )}
                     </div>
                   )}
-                  {booking.status === 'Completed' && (
-                    <div className="mt-6 flex gap-3">
-                      <button className="px-5 py-2 text-sm font-semibold border border-orange-200 rounded-lg text-orange-600 hover:bg-orange-50 transition">
-                        Leave a Review
-                      </button>
-                    </div>
-                  )}
+
 
                 </div>
               </div>
