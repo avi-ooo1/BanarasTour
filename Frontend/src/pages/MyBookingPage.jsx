@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
+import { toast } from 'react-toastify';
 
 const MyBookingPage = () => {
   const { backendUrl } = useContext(AppContext);
@@ -35,6 +36,7 @@ const MyBookingPage = () => {
         }
       } catch (err) {
         console.error("Failed to fetch bookings", err);
+        toast.error("Failed to fetch bookings");
       }
     };
     fetchBookings();

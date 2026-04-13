@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 export const AppContext = createContext();
 
@@ -28,6 +29,7 @@ const AppContextProvider = (props) => {
             }
         } catch (error) {
             console.error("Error fetching tours:", error);
+            toast.error("Failed to fetch tours data. Check network status.");
         }
     }
 

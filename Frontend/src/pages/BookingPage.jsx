@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { AppContext } from '../context/AppContext';
 import bookingBanner from '../assets/BookingAssets/BookingBanner.png';
@@ -24,9 +24,56 @@ const BookingPage = () => {
     quantity: ''
   });
 
+  const [availableCars, setAvailableCars] = useState(10);
+
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (formData.date) {
+        try {
+          const response = await fetch(`${backendUrl}/api/booking/availability`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: formData.date })
+          });
+          const data = await response.json();
+          if (data.success) {
+            setAvailableCars(data.availableCars);
+            if (data.availableCars === 0) {
+              toast.error("No tour available on this date.");
+            } else if (data.availableCars < 10) {
+              toast.info(`Note: Only ${data.availableCars} car(s) left for this date.`);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching availability:", error);
+        }
+      } else {
+        setAvailableCars(10);
+      }
+    };
+    fetchAvailability();
+  }, [formData.date, backendUrl]);
+
+
   const handleAddCar = () => {
+    if (!formData.date) {
+      toast.warning('Please select a date first to check availability.');
+      return;
+    }
+
     const qty = Number(currentCarSelection.quantity);
     if (!currentCarSelection.type || isNaN(qty) || qty <= 0) return; // Prevent adding empty selection or invalid quantity
+    
+    // Check if adding this quantity exceeds availability
+    const currentTotalCars = formData.selectedCars.reduce((sum, car) => sum + car.quantity, 0);
+    if (currentTotalCars + qty > availableCars) {
+      if (availableCars === 0) {
+        toast.error("No tour available on this date.");
+      } else {
+        toast.error(`Only ${availableCars} car(s) available on this date.`);
+      }
+      return;
+    }
     
     const existingIndex = formData.selectedCars.findIndex(c => c.type === currentCarSelection.type);
     
@@ -138,23 +185,6 @@ const BookingPage = () => {
             },
             theme: {
               color: '#ea580c', // Tailwind's orange-600
-            },
-            config: {
-              display: {
-                blocks: {
-                  custom_options: {
-                    name: 'Select UPI or Card',
-                    instruments: [
-                      { method: 'upi' },
-                      { method: 'card' }
-                    ]
-                  }
-                },
-                sequence: ['block.custom_options'],
-                preferences: {
-                  show_default_blocks: false
-                }
-              }
             }
           };
           const rzp = new window.Razorpay(options);

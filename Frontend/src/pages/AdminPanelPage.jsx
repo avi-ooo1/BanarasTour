@@ -63,6 +63,7 @@ const AdminPanelPage = () => {
             }
         } catch (error) {
             console.error("Login failed:", error);
+            toast.error("Login failed");
         }
     };
 
@@ -82,6 +83,7 @@ const AdminPanelPage = () => {
             }
         } catch (error) {
             console.error("Logout failed:", error);
+            toast.error("Logout failed");
             localStorage.removeItem('adminToken');
             setIsAuthenticated(false);
         }
@@ -105,6 +107,7 @@ const AdminPanelPage = () => {
             }
         } catch (error) {
             console.error("Error fetching bookings:", error);
+            toast.error("Error fetching bookings");
         }
     };
 
@@ -135,6 +138,7 @@ const AdminPanelPage = () => {
             }
         } catch (error) {
             console.error(error);
+            toast.error("Error adding tour");
         }
     };
 
@@ -160,6 +164,7 @@ const AdminPanelPage = () => {
             }
         } catch (error) {
             console.error(error);
+            toast.error("Error deleting tour");
         }
     };
 
@@ -184,6 +189,7 @@ const AdminPanelPage = () => {
             }
         } catch (error) {
             console.error(error);
+            toast.error("Error updating status");
         }
     };
 
@@ -209,6 +215,7 @@ const AdminPanelPage = () => {
             }
         } catch (error) {
             console.error(error);
+            toast.error("Error deleting booking");
         }
     };
 

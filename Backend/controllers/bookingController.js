@@ -6,6 +6,31 @@ import User from "../models/User.js";
 export const addBooking = async(req,res)=>{
     try {
         const { userId, ...bookingData } = req.body;
+        
+        // Enforce max 10 cars limit total per date (backend validation)
+        if (bookingData.selectedCars && Array.isArray(bookingData.selectedCars)) {
+            const requestedCars = bookingData.selectedCars.reduce((sum, car) => sum + (Number(car.quantity) || 0), 0);
+            
+            const existingBookings = await Booking.find({ date: bookingData.date });
+            let alreadyBooked = 0;
+            existingBookings.forEach(b => {
+                if (b.selectedCars && Array.isArray(b.selectedCars)) {
+                    b.selectedCars.forEach(c => {
+                        alreadyBooked += (Number(c.quantity) || 0);
+                    });
+                }
+            });
+
+            if (alreadyBooked + requestedCars > 10) {
+                const available = Math.max(0, 10 - alreadyBooked);
+                if (available === 0) {
+                    return res.json({ success: false, message: "No tour/cars available on this date." });
+                } else {
+                    return res.json({ success: false, message: `Only ${available} car(s) available on this date.` });
+                }
+            }
+        }
+
         const actualUserId = userId || req.userId;
         await Booking.create({ ...bookingData, userId: actualUserId });
         res.json({success:true,message:"Booking Placed Successfully"});
@@ -72,5 +97,32 @@ export const deleteBooking = async(req,res) => {
     } catch (error) {
         console.log(error);
         res.json({success:false, message:error.message});
+    }
+}
+
+// Check Availability : api/booking/availability
+export const checkAvailability = async (req, res) => {
+    try {
+        const { date } = req.body;
+        if (!date) {
+            return res.json({ success: false, message: "Date is required" });
+        }
+        
+        const existingBookings = await Booking.find({ date });
+        let alreadyBooked = 0;
+        
+        existingBookings.forEach(b => {
+            if (b.selectedCars && Array.isArray(b.selectedCars)) {
+                b.selectedCars.forEach(c => {
+                    alreadyBooked += (Number(c.quantity) || 0);
+                });
+            }
+        });
+        
+        const availableCars = Math.max(0, 10 - alreadyBooked);
+        res.json({ success: true, availableCars });
+    } catch (error) {
+        console.log("Availability Error:", error);
+        res.json({ success: false, message: error.message });
     }
 }
