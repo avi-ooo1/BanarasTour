@@ -9,9 +9,13 @@ const MyBookingPage = () => {
   React.useEffect(() => {
     const fetchBookings = async () => {
       try {
+        const token = localStorage.getItem('token');
         const response = await fetch(`${backendUrl}/api/booking/get`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          },
           credentials: 'include',
         });
         const data = await response.json();

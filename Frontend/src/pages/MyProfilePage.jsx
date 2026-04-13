@@ -48,8 +48,12 @@ const MyProfilePage = () => {
                 formData.append('image', image);
             }
 
+            const token = localStorage.getItem('token');
             const response = await fetch(`${backendUrl}/api/user/update-profile`, {
                 method: 'POST',
+                headers: {
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
                 credentials: 'include',
                 body: formData
             });

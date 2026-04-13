@@ -36,6 +36,8 @@ const LoginPage = () => {
             const data = await response.json();
             
             if (data.success) {
+                // Save token in browser storage
+                if (data.token) localStorage.setItem('token', data.token);
                 setIsAuth(true);
                 setUserData(data.user);
                 toast.success(state === 'Sign Up' ? "Registered Successfully!" : "Logged In Successfully!");
@@ -60,6 +62,7 @@ const LoginPage = () => {
             const data = await response.json();
             
             if (data.success) {
+                if (data.token) localStorage.setItem('token', data.token);
                 setIsAuth(true);
                 setUserData(data.user);
                 toast.success("Authenticated with Google Successfully!");

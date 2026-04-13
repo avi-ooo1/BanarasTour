@@ -67,9 +67,13 @@ const BookingPage = () => {
           totalAmount,
           payment: paymentVerified,
         };
+        const token = localStorage.getItem('token');
         const response = await fetch(`${backendUrl}/api/booking/add`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          },
           credentials: 'include',
           body: JSON.stringify(bookingPayload),
         });

@@ -34,7 +34,7 @@ export const register = async (req,res) =>{
        
        res.cookie('token', token, getCookieOptions());
 
-       return res.json({success:true, user:{email:user.email, name:user.name}})
+       return res.json({success:true, token, user:{email:user.email, name:user.name}})
 
     } catch (error) {
         console.log(error.message);
@@ -64,7 +64,7 @@ export const login = async (req,res) =>{
 
         res.cookie('token', token, getCookieOptions());
 
-        return res.json({success:true,user:{email:user.email,name:user.name}});
+        return res.json({success:true, token, user:{email:user.email,name:user.name}});
 
     } catch (error) {
         console.log(error.message);
@@ -118,7 +118,7 @@ export const googleAuth = async (req, res) => {
         }
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
         res.cookie('token', token, getCookieOptions());
-        return res.json({ success: true, user: { email: user.email, name: user.name } });
+        return res.json({ success: true, token, user: { email: user.email, name: user.name } });
     } catch (error) {
         console.log(error.message);
         return res.json({ success: false, message: "Google Authentication Failed" });

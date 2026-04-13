@@ -21,12 +21,17 @@ function Navbar() {
 
   const handleLogout = async () => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`${backendUrl}/api/user/logout`, {
         method: 'GET',
+        headers: {
+            ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         credentials: 'include',
       });
       const data = await response.json();
       if (data.success || data.message === "Not Authorized") {
+        localStorage.removeItem('token');
         setIsAuth(false);
         setUserData(null);
         toast.success("Logged Out Successfully");
@@ -37,6 +42,7 @@ function Navbar() {
     } catch (error) {
       console.error('Logout error', error);
       // Force logout on frontend anyway if network fails
+      localStorage.removeItem('token');
       setIsAuth(false);
       setUserData(null);
       toast.success("Logged Out Successfully");

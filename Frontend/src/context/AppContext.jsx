@@ -34,8 +34,12 @@ const AppContextProvider = (props) => {
     const checkAuthStatus = async () => {
         if (!backendUrl) return;
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch(`${backendUrl}/api/user/is-auth`, {
                 method: 'GET',
+                headers: {
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
                 credentials: 'include',
             });
             const data = await response.json();
