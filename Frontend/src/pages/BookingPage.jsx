@@ -107,6 +107,16 @@ const BookingPage = () => {
     e.preventDefault();
     console.log('Booking Details:', formData);
 
+    const totalCapacity = formData.selectedCars.reduce((sum, car) => {
+      const seats = car.type.includes('6 Seater') ? 6 : (car.type.includes('4 Seater') ? 4 : 4);
+      return sum + (seats * car.quantity);
+    }, 0);
+
+    if (Number(formData.guests) > totalCapacity) {
+      toast.error(`You have selected vehicles for only ${totalCapacity} guests, but entered ${formData.guests} guests. Please add more vehicles or reduce guests.`);
+      return;
+    }
+
     const saveBooking = async (paymentVerified) => {
       try {
         const bookingPayload = {

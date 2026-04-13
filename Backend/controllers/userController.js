@@ -11,7 +11,8 @@ const getCookieOptions = () => ({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: '/'
 });
 
 //Register User : api/user/register
@@ -88,11 +89,10 @@ export const isAuth = async(req,res) =>{
 //Logout User : api/user/logout
 export const userLogout = async (req,res) =>{
     try {
-        res.clearCookie('token', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-        })
+        const options = getCookieOptions();
+        res.clearCookie('token', options);
+        // Force expiry by setting maxAge to 0, works better on some browsers
+        res.cookie('token', '', { ...options, maxAge: 0 });
         return res.json({success:true,message:"Logged out successfully"});
     } catch (error) {
         console.log(error.message);
