@@ -69,7 +69,7 @@ const ContactUsPage = () => {
                                 required
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="Eden Johnson"
+                                placeholder="Avinash Saini"
                                 className='w-full bg-[#00A63E]/5 border border-white/20 rounded-lg px-4 py-3 text-white/40 placeholder:text-white/40 placeholder:text-sm focus:outline-none focus:border-green-600 transition'
                             />
                         </div>
@@ -81,7 +81,7 @@ const ContactUsPage = () => {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Eden@example.com"
+                                placeholder="avi@gmail.com"
                                 className='w-full bg-[#00A63E]/5 border border-white/20 rounded-lg px-4 py-3 text-white/40 placeholder:text-white/40 placeholder:text-sm focus:outline-none focus:border-green-600 transition'
                             />
                         </div>
