@@ -1,6 +1,7 @@
 // Add Booking : api/booking/add
 
 import Booking from "../models/Booking.js";
+import User from "../models/User.js";
 
 export const addBooking = async(req,res)=>{
     try {
@@ -18,7 +19,20 @@ export const addBooking = async(req,res)=>{
 export const getBookings  = async(req,res)=>{
     try {
         const userId = req.userId || req.body.userId;
-        const bookings = await Booking.find({userId});
+        const user = await User.findById(userId);
+        
+        let bookings = [];
+        if (user && user.email) {
+            // Find by userId or the email typed in the booking form
+            bookings = await Booking.find({
+                $or: [
+                    { userId: userId },
+                    { email: user.email }
+                ]
+            });
+        } else {
+            bookings = await Booking.find({userId});
+        }
         res.json({success:true,bookings});
     } catch (error) {
         console.log(error);
