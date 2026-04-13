@@ -1,13 +1,14 @@
 import express from "express";
 import authUser from "../middlewares/authUser.js";
 import authAdmin from "../middlewares/authAdmin.js";
-import { addBooking, getBookings, getAllBookings, updateBookingStatus, deleteBooking, checkAvailability, cancelBooking, updateBookingData } from "../controllers/bookingController.js";
+import { addBooking, getBookings, getAllBookings, updateBookingStatus, deleteBooking, checkAvailability, cancelBooking, updateBookingData, getMonthlyAvailability } from "../controllers/bookingController.js";
 
 const bookingRouter = express.Router();
 
 bookingRouter.post("/add",authUser,addBooking);
 bookingRouter.post("/get",authUser,getBookings);
 bookingRouter.post("/availability", checkAvailability);
+bookingRouter.post("/monthly-availability", getMonthlyAvailability);
 bookingRouter.post("/cancel", authUser, cancelBooking);
 bookingRouter.post("/update", authUser, updateBookingData);
 

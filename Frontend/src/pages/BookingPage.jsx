@@ -1,5 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { AppContext } from '../context/AppContext';
 import bookingBanner from '../assets/BookingAssets/BookingBanner.png';
 
@@ -33,33 +35,69 @@ const BookingPage = () => {
 
   const [availableCars, setAvailableCars] = useState(10);
 
+  const [monthlyAvailability, setMonthlyAvailability] = useState({});
+
+  useEffect(() => {
+    const today = new Date();
+    fetchMonthlyAvailability(today.getFullYear(), today.getMonth() + 1);
+  }, [backendUrl]);
+
+  const fetchMonthlyAvailability = async (year, month) => {
+    try {
+      const res = await fetch(`${backendUrl}/api/booking/monthly-availability`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, month })
+      });
+      const data = await res.json();
+      if(data.success) {
+         setMonthlyAvailability(prev => ({ ...prev, ...data.availabilityMap }));
+      }
+    } catch(e) {}
+  };
+
+  const handleMonthChange = (date) => {
+    fetchMonthlyAvailability(date.getFullYear(), date.getMonth() + 1);
+  };
+
   useEffect(() => {
     const fetchAvailability = async () => {
       if (formData.date) {
-        try {
-          const response = await fetch(`${backendUrl}/api/booking/availability`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ date: formData.date })
-          });
-          const data = await response.json();
-          if (data.success) {
-            setAvailableCars(data.availableCars);
-            if (data.availableCars === 0) {
-              toast.error("No tour available on this date.");
-            } else if (data.availableCars < 10) {
-              toast.info(`Note: Only ${data.availableCars} car(s) left for this date.`);
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching availability:", error);
+        // Automatically rely on pre-fetched monthly availability to speed things up
+        if (monthlyAvailability[formData.date] !== undefined) {
+           setAvailableCars(monthlyAvailability[formData.date]);
+           if (monthlyAvailability[formData.date] === 0) {
+             toast.error("No tour available on this date.");
+           } else if (monthlyAvailability[formData.date] < 10) {
+             toast.info(`Note: Only ${monthlyAvailability[formData.date]} car(s) left for this date.`);
+           }
         }
       } else {
         setAvailableCars(10);
       }
     };
     fetchAvailability();
-  }, [formData.date, backendUrl]);
+  }, [formData.date, monthlyAvailability]);
+
+  const renderDayContents = (day, date) => {
+    const dateStr = [
+       date.getFullYear(),
+       (date.getMonth() + 1).toString().padStart(2, '0'),
+       date.getDate().toString().padStart(2, '0')
+    ].join('-');
+    const availableCarsOnDate = monthlyAvailability[dateStr];
+    
+    const isPast = date < new Date(minDate);
+    
+    return (
+      <div className="relative w-full h-full flex flex-col items-center justify-center p-1">
+        <span>{day}</span>
+        {!isPast && availableCarsOnDate !== undefined && (
+           <span className={`absolute bottom-0 w-1.5 h-1.5 rounded-full ${availableCarsOnDate === 0 ? 'bg-red-500 shadow-[0_0_4px_red]' : 'bg-green-500 shadow-[0_0_4px_green]'}`}></span>
+        )}
+      </div>
+    );
+  };
 
 
   const handleAddCar = () => {
@@ -326,16 +364,29 @@ const BookingPage = () => {
 
                   <div>
                     <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Tour Date</label>
-                    <input
-                      type="date"
-                      name="date"
-                      id="date"
+                    <style>
+                      {`
+                         .react-datepicker-wrapper { width: 100%; }
+                         .react-datepicker__input-container input { width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.75rem 1rem; color: #111827; background-color: #f9fafb; outline: none; }
+                         .react-datepicker__input-container input:focus { border-color: #f97316; box-shadow: 0 0 0 1px #f97316; }
+                      `}
+                    </style>
+                    <DatePicker
+                      selected={formData.date ? new Date(formData.date) : null}
+                      onChange={(date) => {
+                         if (!date) return;
+                         let offsetDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+                         handleChange({ target: { name: 'date', value: offsetDate.toISOString().split('T')[0] } });
+                      }}
+                      onMonthChange={handleMonthChange}
+                      minDate={new Date(minDate)}
+                      maxDate={new Date(maxDate)}
+                      renderDayContents={renderDayContents}
+                      placeholderText="Select Tour Date"
+                      className={`${!formData.date ? 'text-gray-500' : 'text-gray-900'}`}
                       required
-                      min={minDate}
-                      max={maxDate}
-                      value={formData.date}
-                      onChange={handleChange}
-                      className={`py-3 px-4 block w-full shadow-sm focus:ring-orange-500 focus:border-orange-500 border-gray-300 rounded-lg border bg-gray-50 ${!formData.date ? 'text-gray-500' : 'text-gray-900'}`}
+                      popperPlacement="bottom-start"
+                      dateFormat="dd/MM/yyyy"
                     />
                   </div>
                 </div>

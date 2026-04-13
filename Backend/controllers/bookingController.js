@@ -173,6 +173,45 @@ export const checkAvailability = async (req, res) => {
     }
 }
 
+// Check Monthly Availability : api/booking/monthly-availability
+export const getMonthlyAvailability = async (req, res) => {
+    try {
+        const { year, month } = req.body; // month is 1-12
+        if (!year || !month) return res.json({ success: false, message: "Year and month are required" });
+        
+        let availabilityMap = {};
+        const daysInMonth = new Date(year, month, 0).getDate();
+        
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dateStr = [
+                 year,
+                 month.toString().padStart(2, '0'),
+                 i.toString().padStart(2, '0')
+             ].join('-');
+             
+            // Calculate availability for this date
+            availabilityMap[dateStr] = await calculateAvailability(dateStr);
+        }
+        
+        // Also check the next 15 days of the adjacent month to support forward rendering smoothly
+        let nextMonth = month + 1;
+        let nextYear = year;
+        if(nextMonth > 12) { nextMonth = 1; nextYear += 1;}
+        for (let i = 1; i <= 15; i++) {
+            const dateStr = [
+                 nextYear,
+                 nextMonth.toString().padStart(2, '0'),
+                 i.toString().padStart(2, '0')
+             ].join('-');
+            availabilityMap[dateStr] = await calculateAvailability(dateStr);
+        }
+
+        res.json({ success: true, availabilityMap });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
+
 // User: Cancel Booking : api/booking/cancel
 export const cancelBooking = async (req, res) => {
     try {

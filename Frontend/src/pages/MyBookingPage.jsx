@@ -1,5 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 
@@ -64,9 +66,55 @@ const MyBookingPage = () => {
       }
     };
   
-  React.useEffect(() => {
+  const [monthlyAvailability, setMonthlyAvailability] = useState({});
+
+  useEffect(() => {
     fetchBookings();
+    const today = new Date();
+    fetchMonthlyAvailability(today.getFullYear(), today.getMonth() + 1);
   }, []);
+
+  const fetchMonthlyAvailability = async (year, month) => {
+    try {
+      const res = await fetch(`${backendUrl}/api/booking/monthly-availability`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, month })
+      });
+      const data = await res.json();
+      if(data.success) {
+         setMonthlyAvailability(prev => ({ ...prev, ...data.availabilityMap }));
+      }
+    } catch(e) {}
+  };
+
+  const renderDayContents = (day, date) => {
+    const dateStr = [
+       date.getFullYear(),
+       (date.getMonth() + 1).toString().padStart(2, '0'),
+       date.getDate().toString().padStart(2, '0')
+    ].join('-');
+    
+    // Give back the cars that are already in the CURRENT booking to total available pool
+    let activeAvailable = monthlyAvailability[dateStr];
+    if (activeAvailable !== undefined && editingBookingId) {
+        const originalBooking = bookings.find(b => b.id === editingBookingId);
+        if (originalBooking && originalBooking.date === dateStr) {
+           activeAvailable += originalBooking.cars.reduce((sum, car) => sum + Number(car.quantity), 0);
+        }
+    }
+
+    const isPast = date < new Date(minDate);
+    
+    return (
+      <div className="relative w-full h-full flex flex-col items-center justify-center p-1">
+        <span>{day}</span>
+        {!isPast && activeAvailable !== undefined && (
+           <span className={`absolute bottom-0 w-1.5 h-1.5 rounded-full ${activeAvailable <= 0 ? 'bg-red-500 shadow-[0_0_4px_red]' : 'bg-green-500 shadow-[0_0_4px_green]'}`}></span>
+        )}
+      </div>
+    );
+  };
 
   React.useEffect(() => {
     const fetchEditAvailability = async () => {
@@ -450,15 +498,29 @@ const MyBookingPage = () => {
                          <button onClick={() => setEditingBookingId(null)} className="text-gray-400 hover:text-gray-600 font-bold p-1">✕</button>
                        </div>
                        
+                       <style>
+                         {`
+                           .react-datepicker-wrapper { width: 100%; }
+                           .react-datepicker__input-container input { width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.625rem 0.75rem; font-size: 0.875rem; color: #111827; background-color: #ffffff; outline: none; }
+                           .react-datepicker__input-container input:focus { border-color: #3b82f6; }
+                         `}
+                       </style>
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                          <div>
                            <label className="block text-xs font-semibold text-gray-700 mb-1">New Tour Date</label>
-                           <input 
-                             type="date" 
-                             min={minDate} max={maxDate}
-                             value={editFormData.date} 
-                             onChange={(e) => setEditFormData({...editFormData, date: e.target.value})}
-                             className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                           <DatePicker
+                             selected={editFormData.date ? new Date(editFormData.date) : null}
+                             onChange={(date) => {
+                               if (!date) return;
+                               let offsetDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+                               setEditFormData({...editFormData, date: offsetDate.toISOString().split('T')[0]});
+                             }}
+                             onMonthChange={(date) => fetchMonthlyAvailability(date.getFullYear(), date.getMonth() + 1)}
+                             minDate={new Date(minDate)}
+                             maxDate={new Date(maxDate)}
+                             renderDayContents={renderDayContents}
+                             placeholderText="Select New Date"
+                             dateFormat="dd/MM/yyyy"
                            />
                          </div>
                          <div>
