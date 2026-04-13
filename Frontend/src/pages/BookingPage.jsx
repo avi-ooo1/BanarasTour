@@ -68,11 +68,21 @@ const BookingPage = () => {
       return;
     }
 
+    if (!formData.guests || Number(formData.guests) <= 0) {
+      toast.warning('Please enter the number of guests first.');
+      return;
+    }
+
     const qty = Number(currentCarSelection.quantity);
     if (!currentCarSelection.type || isNaN(qty) || qty <= 0) return; // Prevent adding empty selection or invalid quantity
     
     // Check if adding this quantity exceeds availability
     const currentTotalCars = formData.selectedCars.reduce((sum, car) => sum + car.quantity, 0);
+
+    if (currentTotalCars + qty > Number(formData.guests)) {
+      toast.error(`You cannot book more cars (${currentTotalCars + qty}) than the number of guests (${formData.guests}).`);
+      return;
+    }
     if (currentTotalCars + qty > availableCars) {
       if (availableCars === 0) {
         toast.error("No tour available on this date.");
@@ -119,8 +129,15 @@ const BookingPage = () => {
       return sum + (seats * car.quantity);
     }, 0);
 
+    const totalCarsCount = formData.selectedCars.reduce((sum, car) => sum + car.quantity, 0);
+
     if (Number(formData.guests) > totalCapacity) {
       toast.error(`You have selected vehicles for only ${totalCapacity} guests, but entered ${formData.guests} guests. Please add more vehicles or reduce guests.`);
+      return;
+    }
+
+    if (totalCarsCount > Number(formData.guests)) {
+      toast.error(`You cannot book more cars (${totalCarsCount}) than the number of guests (${formData.guests}). Please remove excess cars.`);
       return;
     }
 
