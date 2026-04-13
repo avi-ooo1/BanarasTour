@@ -65,6 +65,7 @@ const MyBookingPage = () => {
             cancelComment: b.cancelComment || '',
             cancelledBy: b.cancelledBy || '',
             refundAmount: b.refundAmount || 0,
+            amountPaid: b.amountPaid !== undefined ? b.amountPaid : (b.payment ? b.totalAmount : 0),
             bookingDate: formatIN(b.createdAt || Date.now()),
             name: b.name || 'Customer',
             email: b.email || 'N/A',
@@ -422,14 +423,49 @@ const MyBookingPage = () => {
     // Finance calculations
     const finalY = doc.lastAutoTable.finalY + 15;
     
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text(`Grand Total: Rs ${booking.totalAmount.toLocaleString()}`, 130, finalY);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
     
+    doc.text(`Sub Total:`, 130, finalY);
+    doc.text(`Rs ${booking.totalAmount.toLocaleString()}`, 170, finalY);
+    
+    let currentY = finalY;
+
     if (booking.refundAmount > 0) {
+        currentY += 8;
         doc.setTextColor(34, 197, 94); // Green
-        doc.text(`Refunded/Adjusted: Rs ${booking.refundAmount.toLocaleString()}`, 130, finalY + 10);
+        doc.text(`Refunded/Adjusted:`, 130, currentY);
+        doc.text(`Rs ${booking.refundAmount.toLocaleString()}`, 170, currentY);
+        doc.setTextColor(50, 50, 50); // reset
     }
+
+    currentY += 10;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text(`Amount Paid:`, 130, currentY);
+    doc.text(`Rs ${(booking.amountPaid || 0).toLocaleString()}`, 170, currentY);
+
+    currentY += 10;
+    const balanceDue = Math.max(0, booking.totalAmount - (booking.amountPaid || 0));
+    
+    doc.text(`Balance Due:`, 130, currentY);
+    if (balanceDue > 0) {
+        doc.setTextColor(220, 38, 38); // Red
+    } else {
+        doc.setTextColor(34, 197, 94); // Green
+    }
+    doc.text(`Rs ${balanceDue.toLocaleString()}`, 170, currentY);
+    
+    // Status text below it
+    currentY += 12;
+    doc.setFontSize(14);
+    if (balanceDue > 0) {
+        doc.text(`STATUS: UNPAID`, 130, currentY);
+    } else {
+        doc.text(`STATUS: PAID IN FULL`, 130, currentY);
+    }
+
+    doc.setTextColor(50, 50, 50);
     
     // Footer notes
     doc.setTextColor(150, 150, 150);
