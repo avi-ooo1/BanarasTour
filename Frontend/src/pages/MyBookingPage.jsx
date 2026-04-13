@@ -4,11 +4,19 @@ import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 
 const MyBookingPage = () => {
-  const { backendUrl } = useContext(AppContext);
+  const { backendUrl, getToursData } = useContext(AppContext);
   const [bookings, setBookings] = useState([]);
+  const [editingDateId, setEditingDateId] = useState(null);
+  const [newDate, setNewDate] = useState('');
 
-  React.useEffect(() => {
-    const fetchBookings = async () => {
+  // Date Constraints for change date
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
+  const nextMonth = new Date();
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  const maxDate = nextMonth.toISOString().split('T')[0];
+
+  const fetchBookings = async () => {
       try {
         const token = localStorage.getItem('token');
         const response = await fetch(`${backendUrl}/api/booking/get`, {
@@ -39,20 +47,62 @@ const MyBookingPage = () => {
         toast.error("Failed to fetch bookings");
       }
     };
+  
+  React.useEffect(() => {
     fetchBookings();
   }, []);
 
   const handleCancelBooking = async (bookingId) => {
-    // Show confirmation before cancelling
-    if (window.confirm("Are you sure you want to cancel this booking?")) {
-      // Future TODO: Create cancel booking API and call it here.
-      setBookings((prevBookings) => 
-        prevBookings.map((booking) => 
-          booking.id === bookingId 
-            ? { ...booking, status: 'Cancelled' } 
-            : booking
-        )
-      );
+    if (window.confirm("Are you sure you want to cancel this tour booking?")) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${backendUrl}/api/booking/cancel`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          },
+          body: JSON.stringify({ id: bookingId })
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast.success("Booking Cancelled");
+          fetchBookings();
+        } else {
+          toast.error(data.message);
+        }
+      } catch (error) {
+        toast.error("Failed to cancel booking");
+      }
+    }
+  };
+
+  const handleDateChange = async (bookingId) => {
+    if (!newDate) {
+      toast.warning("Please select a new date.");
+      return;
+    }
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${backendUrl}/api/booking/change-date`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          },
+          body: JSON.stringify({ id: bookingId, newDate })
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast.success("Booking Date Updated!");
+          setEditingDateId(null);
+          setNewDate('');
+          fetchBookings();
+        } else {
+          toast.error(data.message);
+        }
+    } catch (error) {
+        toast.error("Failed to change date");
     }
   };
 
@@ -144,14 +194,49 @@ const MyBookingPage = () => {
                   </div>
                   
                   {/* Action Buttons */}
-                  {booking.status === 'Upcoming' && (
-                    <div className="mt-6 flex gap-3">
+                  {(booking.status === 'Upcoming' || booking.status === 'Booking Placed' || booking.status === 'BOOKING PLACED' || booking.status === 'Confirmed') && (
+                    <div className="mt-6 flex flex-wrap gap-3 items-center">
                       <button 
                         onClick={() => handleCancelBooking(booking.id)}
                         className="px-5 py-2 text-sm font-semibold rounded-lg text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 hover:border-red-200 transition"
                       >
                         Cancel Booking
                       </button>
+                      
+                      {editingDateId === booking.id ? (
+                         <div className="flex items-center gap-2">
+                           <input 
+                             type="date" 
+                             min={minDate}
+                             max={maxDate}
+                             value={newDate} 
+                             onChange={(e) => setNewDate(e.target.value)}
+                             className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
+                           />
+                           <button 
+                             onClick={() => handleDateChange(booking.id)}
+                             className="px-3 py-1.5 text-sm font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg transition"
+                           >
+                             Save
+                           </button>
+                           <button 
+                             onClick={() => { setEditingDateId(null); setNewDate(''); }}
+                             className="px-3 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                           >
+                             Cancel
+                           </button>
+                         </div>
+                      ) : (
+                        <button 
+                          onClick={() => {
+                             setEditingDateId(booking.id);
+                             setNewDate(booking.date);
+                          }}
+                          className="px-5 py-2 text-sm font-semibold rounded-lg text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition"
+                        >
+                          Change Date
+                        </button>
+                      )}
                     </div>
                   )}
                   {booking.status === 'Completed' && (

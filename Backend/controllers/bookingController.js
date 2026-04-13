@@ -58,6 +58,21 @@ export const getBookings  = async(req,res)=>{
         } else {
             bookings = await Booking.find({userId});
         }
+
+        // Auto-complete past bookings
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let updated = false;
+        for (let b of bookings) {
+            const bookingDate = new Date(b.date);
+            bookingDate.setHours(0, 0, 0, 0);
+            if (bookingDate < today && !['Completed', 'Cancelled'].includes(b.status)) {
+                b.status = 'Completed';
+                await Booking.findByIdAndUpdate(b._id, { status: 'Completed' });
+                updated = true;
+            }
+        }
+
         res.json({success:true,bookings});
     } catch (error) {
         console.log(error);
@@ -69,6 +84,19 @@ export const getBookings  = async(req,res)=>{
 export const getAllBookings = async(req,res) => {
     try {
         const bookings = await Booking.find({});
+        
+        // Auto-complete past bookings for admin view too
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        for (let b of bookings) {
+            const bookingDate = new Date(b.date);
+            bookingDate.setHours(0, 0, 0, 0);
+            if (bookingDate < today && !['Completed', 'Cancelled'].includes(b.status)) {
+                b.status = 'Completed';
+                await Booking.findByIdAndUpdate(b._id, { status: 'Completed' });
+            }
+        }
+
         res.json({success:true, bookings});
     } catch (error) {
         console.log(error);
@@ -108,7 +136,7 @@ export const checkAvailability = async (req, res) => {
             return res.json({ success: false, message: "Date is required" });
         }
         
-        const existingBookings = await Booking.find({ date });
+        const existingBookings = await Booking.find({ date, status: { $ne: 'Cancelled' } });
         let alreadyBooked = 0;
         
         existingBookings.forEach(b => {
@@ -126,3 +154,73 @@ export const checkAvailability = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 }
+
+// User: Cancel Booking : api/booking/cancel
+export const cancelBooking = async (req, res) => {
+    try {
+        const { id } = req.body;
+        const booking = await Booking.findById(id);
+        if (!booking) return res.json({ success: false, message: "Booking not found" });
+
+        // User ownership check
+        if (booking.userId !== req.userId) {
+            const user = await User.findById(req.userId);
+            if (!user || booking.email !== user.email) {
+                return res.json({ success: false, message: "Not authorized to cancel this booking" });
+            }
+        }
+
+        // Only allow cancel if not already completed/cancelled
+        if (booking.status === 'Completed' || booking.status === 'Cancelled') {
+            return res.json({ success: false, message: `Booking is already ${booking.status}` });
+        }
+
+        await Booking.findByIdAndUpdate(id, { status: 'Cancelled' });
+        res.json({ success: true, message: "Booking Cancelled Successfully" });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// User: Change Booking Date : api/booking/change-date
+export const changeBookingDate = async (req, res) => {
+    try {
+        const { id, newDate } = req.body;
+        if (!newDate) return res.json({ success: false, message: "New date is required" });
+
+        const booking = await Booking.findById(id);
+        if (!booking) return res.json({ success: false, message: "Booking not found" });
+
+        // User ownership check
+        if (booking.userId !== req.userId) {
+            const user = await User.findById(req.userId);
+            if (!user || booking.email !== user.email) {
+                return res.json({ success: false, message: "Not authorized to change this booking" });
+            }
+        }
+
+        if (booking.status === 'Completed' || booking.status === 'Cancelled') {
+            return res.json({ success: false, message: `Cannot change date for a ${booking.status} booking` });
+        }
+
+        // Availability check on the new date
+        const requestedCars = booking.selectedCars.reduce((sum, car) => sum + (Number(car.quantity) || 0), 0);
+        const existingBookings = await Booking.find({ date: newDate, status: { $ne: 'Cancelled' } });
+        let alreadyBooked = 0;
+        existingBookings.forEach(b => {
+             if (b.selectedCars && Array.isArray(b.selectedCars)) {
+                 b.selectedCars.forEach(c => alreadyBooked += (Number(c.quantity) || 0));
+             }
+        });
+        
+        if (alreadyBooked + requestedCars > 10) {
+            const available = Math.max(0, 10 - alreadyBooked);
+            return res.json({ success: false, message: available === 0 ? "No tour/cars available on new date." : `Only ${available} car(s) left on new date.` });
+        }
+
+        await Booking.findByIdAndUpdate(id, { date: newDate });
+        res.json({ success: true, message: "Booking Date Updated Successfully" });
+    } catch (error) {
+         res.json({ success: false, message: error.message });
+    }
+};
