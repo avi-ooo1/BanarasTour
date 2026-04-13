@@ -193,11 +193,13 @@ export const cancelBooking = async (req, res) => {
     }
 };
 
-// User: Change Booking Date : api/booking/change-date
-export const changeBookingDate = async (req, res) => {
+// User: Update Booking : api/booking/update-booking
+export const updateBookingData = async (req, res) => {
     try {
-        const { id, newDate } = req.body;
-        if (!newDate) return res.json({ success: false, message: "New date is required" });
+        const { id, newDate, newGuests, newSelectedCars, newTotalAmount } = req.body;
+        if (!newDate || !newGuests || !newSelectedCars || !newTotalAmount) {
+            return res.json({ success: false, message: "All fields are required" });
+        }
 
         const booking = await Booking.findById(id);
         if (!booking) return res.json({ success: false, message: "Booking not found" });
@@ -211,12 +213,12 @@ export const changeBookingDate = async (req, res) => {
         }
 
         if (booking.status === 'Completed' || booking.status === 'Cancelled') {
-            return res.json({ success: false, message: `Cannot change date for a ${booking.status} booking` });
+            return res.json({ success: false, message: `Cannot edit a ${booking.status} booking` });
         }
 
         // Availability check on the new date
-        const requestedCars = booking.selectedCars.reduce((sum, car) => sum + (Number(car.quantity) || 0), 0);
-        const existingBookings = await Booking.find({ date: newDate, status: { $ne: 'Cancelled' } });
+        const requestedCars = newSelectedCars.reduce((sum, car) => sum + (Number(car.quantity) || 0), 0);
+        const existingBookings = await Booking.find({ date: newDate, status: { $ne: 'Cancelled' }, _id: { $ne: id } }); // Exclude current booking
         let alreadyBooked = 0;
         existingBookings.forEach(b => {
              if (b.selectedCars && Array.isArray(b.selectedCars)) {
@@ -229,8 +231,14 @@ export const changeBookingDate = async (req, res) => {
             return res.json({ success: false, message: available === 0 ? "No tour/cars available on new date." : `Only ${available} car(s) left on new date.` });
         }
 
-        await Booking.findByIdAndUpdate(id, { date: newDate });
-        res.json({ success: true, message: "Booking Date Updated Successfully" });
+        await Booking.findByIdAndUpdate(id, { 
+            date: newDate, 
+            guests: newGuests, 
+            selectedCars: newSelectedCars, 
+            totalAmount: newTotalAmount 
+        });
+        
+        res.json({ success: true, message: "Booking Updated Successfully" });
     } catch (error) {
          res.json({ success: false, message: error.message });
     }

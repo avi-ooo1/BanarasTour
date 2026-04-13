@@ -6,10 +6,19 @@ import { toast } from 'react-toastify';
 const MyBookingPage = () => {
   const { backendUrl, getToursData } = useContext(AppContext);
   const [bookings, setBookings] = useState([]);
-  const [editingDateId, setEditingDateId] = useState(null);
-  const [newDate, setNewDate] = useState('');
+  
+  // Full Editing states
+  const [editingBookingId, setEditingBookingId] = useState(null);
+  const [editFormData, setEditFormData] = useState({ date: '', guests: '', selectedCars: [] });
+  const [editAvailableCars, setEditAvailableCars] = useState(10);
+  const [editCarSelection, setEditCarSelection] = useState({ type: '', quantity: '' });
+
   const [cancellingBookingId, setCancellingBookingId] = useState(null);
   const [cancelData, setCancelData] = useState({ reason: '', comment: '' });
+
+  const getPriceFromType = (carType) => {
+    return carType.includes('1200') ? 1200 : carType.includes('2000') ? 2000 : carType.includes('2500') ? 2500 : carType.includes('3000') ? 3000 : carType.includes('3500') ? 3500 : 1500;
+  };
 
   // Date Constraints for change date
   const today = new Date();
@@ -44,7 +53,7 @@ const MyBookingPage = () => {
             cancelReason: b.cancelReason || '',
             cancelComment: b.cancelComment || '',
             cancelledBy: b.cancelledBy || '',
-            bookingDate: new Date(b.createdAt || Date.now()).toLocaleDateString(),
+            bookingDate: new Date(b.createdAt || Date.now()).toLocaleDateString('en-IN'),
           }));
           setBookings(formattedBookings.reverse()); // latest first
         }
@@ -57,6 +66,77 @@ const MyBookingPage = () => {
   React.useEffect(() => {
     fetchBookings();
   }, []);
+
+  React.useEffect(() => {
+    const fetchEditAvailability = async () => {
+      if (editFormData.date && editingBookingId) {
+        try {
+          const response = await fetch(`${backendUrl}/api/booking/availability`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: editFormData.date })
+          });
+          const data = await response.json();
+          if (data.success) {
+            // Give back the cars that are already in the CURRENT booking to total available pool
+            const originalBooking = bookings.find(b => b.id === editingBookingId);
+            let currentBookingCarsCount = 0;
+            if (originalBooking && originalBooking.date === editFormData.date) {
+               currentBookingCarsCount = originalBooking.cars.reduce((sum, car) => sum + Number(car.quantity), 0);
+            }
+            setEditAvailableCars(data.availableCars + currentBookingCarsCount);
+          }
+        } catch (error) {
+          console.error("Error fetching availability:", error);
+        }
+      } else {
+        setEditAvailableCars(10);
+      }
+    };
+    fetchEditAvailability();
+  }, [editFormData.date, editingBookingId, backendUrl, bookings]);
+
+  const handleEditAddCar = () => {
+    const qty = Number(editCarSelection.quantity);
+    if (!editCarSelection.type || isNaN(qty) || qty <= 0) return;
+    
+    const currentTotalCars = editFormData.selectedCars.reduce((sum, car) => sum + Number(car.quantity), 0);
+    const maxCarsAllowed = Math.ceil(Number(editFormData.guests) / 4);
+
+    if (currentTotalCars + qty > maxCarsAllowed) {
+      toast.error(`For ${editFormData.guests} guest(s), you can only book up to ${maxCarsAllowed} vehicle(s).`);
+      return;
+    }
+    if (currentTotalCars + qty > editAvailableCars) {
+      toast.error(`Only ${editAvailableCars} car(s) available on this date.`);
+      return;
+    }
+    
+    const existingIndex = editFormData.selectedCars.findIndex(c => c.type === editCarSelection.type);
+    let updatedCars = [...editFormData.selectedCars];
+    if (existingIndex >= 0) {
+      updatedCars[existingIndex].quantity = Number(updatedCars[existingIndex].quantity) + qty;
+    } else {
+      updatedCars.push({ type: editCarSelection.type, quantity: qty });
+    }
+    setEditFormData({ ...editFormData, selectedCars: updatedCars });
+    setEditCarSelection({ type: '', quantity: '' });
+  };
+
+  const handleEditRemoveCar = (index) => {
+    const updatedCars = editFormData.selectedCars.filter((_, i) => i !== index);
+    setEditFormData({ ...editFormData, selectedCars: updatedCars });
+  };
+
+  const openEditMode = (booking) => {
+    setEditingBookingId(booking.id);
+    setEditFormData({ 
+      date: booking.date, 
+      guests: booking.guests, 
+      selectedCars: [...booking.cars] 
+    });
+    setCancellingBookingId(null);
+  };
 
   const processCancel = async () => {
     if (!cancelData.reason) {
@@ -97,32 +177,48 @@ const MyBookingPage = () => {
     setCancelData({ reason: '', comment: '' });
   };
 
-  const handleDateChange = async (bookingId) => {
-    if (!newDate) {
-      toast.warning("Please select a new date.");
+  const handleSaveEdit = async () => {
+    if (!editFormData.date || !editFormData.guests || editFormData.selectedCars.length === 0) {
+      toast.warning("Please fill all details and select at least one vehicle.");
       return;
     }
+
+    const totalCapacity = editFormData.selectedCars.reduce((sum, car) => sum + (car.type.includes('6 Seater') ? 6 : 4) * car.quantity, 0);
+    if (Number(editFormData.guests) > totalCapacity) {
+      toast.error(`You selected vehicles for ${totalCapacity} guests, but entered ${editFormData.guests} guests.`);
+      return;
+    }
+
+    const totalCarPrice = editFormData.selectedCars.reduce((sum, car) => sum + (getPriceFromType(car.type) * car.quantity), 0);
+    const tourPrice = 2000;
+    const newTotalAmount = totalCarPrice + tourPrice;
+
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${backendUrl}/api/booking/change-date`, {
+        const response = await fetch(`${backendUrl}/api/booking/update`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...(token && { 'Authorization': `Bearer ${token}` })
           },
-          body: JSON.stringify({ id: bookingId, newDate })
+          body: JSON.stringify({ 
+             id: editingBookingId, 
+             newDate: editFormData.date,
+             newGuests: editFormData.guests,
+             newSelectedCars: editFormData.selectedCars,
+             newTotalAmount
+          })
         });
         const data = await response.json();
         if (data.success) {
-          toast.success("Booking Date Updated!");
-          setEditingDateId(null);
-          setNewDate('');
+          toast.success("Booking Order Updated! Price matched automatically.");
+          setEditingBookingId(null);
           fetchBookings();
         } else {
           toast.error(data.message);
         }
     } catch (error) {
-        toast.error("Failed to change date");
+        toast.error("Failed to update order");
     }
   };
 
@@ -180,7 +276,7 @@ const MyBookingPage = () => {
                         <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Tour Date: {booking.date}
+                        Tour Date: {new Date(booking.date).toLocaleDateString('en-IN')}
                       </p>
                       <p className="text-[10px] sm:text-xs font-medium text-gray-400 mt-1">Booked On: {booking.bookingDate}</p>
                     </div>
@@ -271,43 +367,96 @@ const MyBookingPage = () => {
                             Cancel Booking
                           </button>
                           
-                          {editingDateId === booking.id ? (
-                             <div className="flex items-center gap-2">
-                               <input 
-                                 type="date" 
-                                 min={minDate}
-                                 max={maxDate}
-                                 value={newDate} 
-                                 onChange={(e) => setNewDate(e.target.value)}
-                                 className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
-                               />
-                               <button 
-                                 onClick={() => handleDateChange(booking.id)}
-                                 className="px-3 py-1.5 text-sm font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg transition"
-                               >
-                                 Save
-                               </button>
-                               <button 
-                                 onClick={() => { setEditingDateId(null); setNewDate(''); }}
-                                 className="px-3 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                               >
-                                 Cancel
-                               </button>
-                             </div>
-                          ) : (
-                            <button 
-                              onClick={() => {
-                                 setEditingDateId(booking.id);
-                                 setNewDate(booking.date);
-                              }}
-                              className="px-5 py-2 text-sm font-semibold rounded-lg text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition"
-                            >
-                              Change Date
-                            </button>
-                          )}
+                          <button 
+                            onClick={() => openEditMode(booking)}
+                            className="px-5 py-2 text-sm font-semibold rounded-lg text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition"
+                          >
+                            Edit Features
+                          </button>
                         </div>
                       )}
                     </div>
+                  )}
+
+                  {/* Inline Full Edit Form */}
+                  {editingBookingId === booking.id && (
+                     <div className="mt-6 p-5 sm:p-6 bg-blue-50/40 border border-blue-100 rounded-xl">
+                       <div className="flex items-center justify-between mb-4">
+                         <h4 className="text-lg font-bold text-gray-900">Edit Your Booking</h4>
+                         <button onClick={() => setEditingBookingId(null)} className="text-gray-400 hover:text-gray-600 font-bold p-1">✕</button>
+                       </div>
+                       
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                         <div>
+                           <label className="block text-xs font-semibold text-gray-700 mb-1">New Tour Date</label>
+                           <input 
+                             type="date" 
+                             min={minDate} max={maxDate}
+                             value={editFormData.date} 
+                             onChange={(e) => setEditFormData({...editFormData, date: e.target.value})}
+                             className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                           />
+                         </div>
+                         <div>
+                           <label className="block text-xs font-semibold text-gray-700 mb-1">Guests</label>
+                           <input 
+                             type="number" min="1"
+                             value={editFormData.guests} 
+                             onChange={(e) => setEditFormData({...editFormData, guests: e.target.value})}
+                             className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                           />
+                         </div>
+                       </div>
+
+                       {/* Cars List Edit */}
+                       <label className="block text-xs font-semibold text-gray-700 mb-2 mt-4">Selected Vehicles</label>
+                       {editFormData.selectedCars.map((car, index) => (
+                         <div key={index} className="flex justify-between items-center bg-white p-2.5 mb-2 rounded border border-gray-200 text-sm">
+                           <div className="font-medium text-gray-800">{car.type.split(' - ')[0]} <span className="text-gray-500 text-xs">(Qty: {car.quantity})</span></div>
+                           <button onClick={() => handleEditRemoveCar(index)} className="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 rounded transition">X</button>
+                         </div>
+                       ))}
+                       
+                       {/* Add Car UI inline */}
+                       <div className="flex gap-2 mb-4 mt-3 flex-wrap sm:flex-nowrap items-end">
+                         <div className="flex-1 w-full min-w-[200px]">
+                           <select
+                             value={editCarSelection.type}
+                             onChange={(e) => setEditCarSelection({...editCarSelection, type: e.target.value})}
+                             className="w-full py-2.5 px-3 block shadow-sm border-gray-300 rounded-lg border bg-white focus:outline-none focus:border-blue-500 text-xs"
+                           >
+                              <option value="" disabled hidden>Select car to add...</option>
+                              <optgroup label="Standard">
+                                <option value="Sedan (Dzire/Etios) - Non AC - 4 Seater - 1200">Sedan Non AC - ₹1,200</option>
+                                <option value="Sedan (Dzire/Etios) - AC - 4 Seater - 1500">Sedan AC - ₹1,500</option>
+                              </optgroup>
+                              <optgroup label="SUV">
+                                <option value="SUV (Innova/Ertiga) - Non AC - 6 Seater - 2000">SUV Non AC - ₹2,000</option>
+                                <option value="SUV (Innova/Ertiga) - AC - 6 Seater - 2500">SUV AC - ₹2,500</option>
+                              </optgroup>
+                              <optgroup label="Premium / Luxury">
+                                <option value="Premium SUV (Innova Crysta) - Non AC - 6 Seater - 3000">Crysta Non AC - ₹3,000</option>
+                                <option value="Premium SUV (Innova Crysta) - AC - 6 Seater - 3500">Crysta AC - ₹3,500</option>
+                                <option value="Luxury Sedan (Honda City) - Non AC - 4 Seater - 2500">City Non AC - ₹2,500</option>
+                                <option value="Luxury Sedan (Honda City) - AC - 4 Seater - 3000">City AC - ₹3,000</option>
+                              </optgroup>
+                           </select>
+                         </div>
+                         <div className="w-16 flex-shrink-0">
+                           <input type="number" min="1" placeholder="Qty" value={editCarSelection.quantity} onChange={(e) => setEditCarSelection({...editCarSelection, quantity: e.target.value})} className="w-full py-2.5 px-2 border-gray-300 rounded-lg border bg-white text-xs text-center focus:outline-none focus:border-blue-500"/>
+                         </div>
+                         <button onClick={handleEditAddCar} className="py-2.5 px-4 bg-gray-800 hover:bg-black text-white text-xs font-bold rounded-lg transition-colors">+ Add</button>
+                       </div>
+                       
+                       <div className="border-t border-gray-200 mt-5 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                         <p className="text-xs text-gray-500">
+                           New Price Approx: <span className="font-bold text-gray-900 text-sm">₹{(editFormData.selectedCars.reduce((s,c) => s + (getPriceFromType(c.type) * c.quantity), 0) + 2000).toLocaleString()}</span>
+                         </p>
+                         <div className="flex gap-2 w-full sm:w-auto">
+                           <button onClick={handleSaveEdit} className="flex-1 sm:flex-none px-6 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition shadow">Save Changes</button>
+                         </div>
+                       </div>
+                     </div>
                   )}
 
                   {/* Show Cancel Info if Cancelled */}
