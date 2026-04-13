@@ -466,8 +466,12 @@ const AdminPanelPage = () => {
                                                 <span className="text-sm font-medium text-gray-500">Booked On: {new Date(booking.createdAt || Date.now()).toLocaleDateString('en-IN')}</span>
                                             </div>
                                             <h3 className="text-lg font-bold text-gray-800">{booking.name} <span className="text-sm font-normal text-gray-500">({booking.email})</span></h3>
-                                            <p className="text-gray-600 text-sm">Tour Date: <span className="font-semibold text-gray-900">{booking.date ? new Date(booking.date).toLocaleDateString('en-IN') : '--'}</span> | Guests: <span className="font-semibold">{booking.guests}</span></p>
-                                            <p className="text-gray-600 text-sm">Total: <span className="font-bold text-gray-900">₹{booking.totalAmount}</span> | Status: <span className={`font-bold ${booking.status === 'Cancelled' ? 'text-red-500' : booking.status === 'Completed' ? 'text-green-500' : 'text-blue-500'}`}>{booking.status}</span></p>
+                                            <p className="text-gray-600 text-sm">Tour Date: <span className="font-semibold text-gray-900">{booking.date ? `${new Date(booking.date).toLocaleDateString('en-IN')} to ${new Date(new Date(booking.date).getTime() + 86400000).toLocaleDateString('en-IN')} (2 Days Tour)` : '--'}</span> | Guests: <span className="font-semibold">{booking.guests}</span></p>
+                                            <p className="text-gray-600 text-sm">
+                                                Total: <span className="font-bold text-gray-900">₹{booking.totalAmount.toLocaleString()}</span> 
+                                                {booking.refundAmount > 0 && <span className="font-bold text-green-600 ml-2">(Refunded: ₹{booking.refundAmount.toLocaleString()})</span>}
+                                                | Status: <span className={`font-bold ml-1 ${booking.status === 'Cancelled' ? 'text-red-500' : booking.status === 'Completed' ? 'text-green-500' : 'text-blue-500'}`}>{booking.status}</span>
+                                            </p>
                                             {booking.status === 'Cancelled' && booking.cancelReason && (
                                                 <div className="mt-2 p-2 bg-red-50 rounded border border-red-100 text-sm">
                                                     <div className="flex items-center gap-2 mb-1">

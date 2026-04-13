@@ -32,7 +32,11 @@ export const addBooking = async(req,res)=>{
         }
 
         const actualUserId = userId || req.userId;
-        await Booking.create({ ...bookingData, userId: actualUserId });
+        let finalBookingData = { ...bookingData, userId: actualUserId };
+        if (finalBookingData.payment) {
+            finalBookingData.amountPaid = finalBookingData.totalAmount;
+        }
+        await Booking.create(finalBookingData);
         res.json({success:true,message:"Booking Placed Successfully"});
     } catch (error) {
         console.log(error);
@@ -231,14 +235,36 @@ export const updateBookingData = async (req, res) => {
             return res.json({ success: false, message: available === 0 ? "No tour/cars available on new date." : `Only ${available} car(s) left on new date.` });
         }
 
-        await Booking.findByIdAndUpdate(id, { 
+        // Financial logic
+        let updateData = { 
             date: newDate, 
             guests: newGuests, 
             selectedCars: newSelectedCars, 
             totalAmount: newTotalAmount 
-        });
-        
-        res.json({ success: true, message: "Booking Updated Successfully" });
+        };
+
+        if (booking.paymentMethod === 'Online' && booking.payment) {
+            const currentlyPaid = booking.amountPaid || booking.totalAmount;
+            if (newTotalAmount > currentlyPaid) {
+                // If the user hasn't explicitly passed 'paymentConfirmed' flag
+                if (!req.body.paymentConfirmed) {
+                    return res.json({ 
+                        success: false, 
+                        requirePayment: true, 
+                        amountToPay: newTotalAmount - currentlyPaid, 
+                        message: "Additional payment required to add more cars." 
+                    });
+                }
+                // If paymentConfirmed is true, it means Razorpay verification succeeded on the frontend
+                updateData.amountPaid = newTotalAmount; // we received the difference
+            } else if (newTotalAmount < currentlyPaid) {
+                updateData.amountPaid = newTotalAmount;
+                updateData.refundAmount = (booking.refundAmount || 0) + (currentlyPaid - newTotalAmount);
+            }
+        }
+
+        await Booking.findByIdAndUpdate(id, updateData);
+        res.json({ success: true, message: "Booking Updated Successfully", refundAmount: updateData.refundAmount });
     } catch (error) {
          res.json({ success: false, message: error.message });
     }

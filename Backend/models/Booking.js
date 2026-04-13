@@ -9,6 +9,8 @@ const bookingSchema = new mongoose.Schema({
     guests: { type: Number, required: true },
     selectedCars: { type: Array, required: true },
     totalAmount: { type: Number, required: true },
+    amountPaid: { type: Number, default: 0 },
+    refundAmount: { type: Number, default: 0 },
     paymentMethod: { type: String, required: true },
     payment: { type: Boolean, default: false },
     status: { type: String, default: 'Booking Placed' },

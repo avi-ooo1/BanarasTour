@@ -53,6 +53,7 @@ const MyBookingPage = () => {
             cancelReason: b.cancelReason || '',
             cancelComment: b.cancelComment || '',
             cancelledBy: b.cancelledBy || '',
+            refundAmount: b.refundAmount || 0,
             bookingDate: new Date(b.createdAt || Date.now()).toLocaleDateString('en-IN'),
           }));
           setBookings(formattedBookings.reverse()); // latest first
@@ -195,25 +196,87 @@ const MyBookingPage = () => {
 
     try {
         const token = localStorage.getItem('token');
+        const payload = { 
+           id: editingBookingId, 
+           newDate: editFormData.date,
+           newGuests: editFormData.guests,
+           newSelectedCars: editFormData.selectedCars,
+           newTotalAmount
+        };
+
         const response = await fetch(`${backendUrl}/api/booking/update`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...(token && { 'Authorization': `Bearer ${token}` })
           },
-          body: JSON.stringify({ 
-             id: editingBookingId, 
-             newDate: editFormData.date,
-             newGuests: editFormData.guests,
-             newSelectedCars: editFormData.selectedCars,
-             newTotalAmount
-          })
+          body: JSON.stringify(payload)
         });
         const data = await response.json();
+
         if (data.success) {
-          toast.success("Booking Order Updated! Price matched automatically.");
+          toast.success(data.refundAmount > 0 
+            ? `Booking Updated! Refund of ₹${data.refundAmount.toLocaleString()} initiated.` 
+            : "Booking Order Updated Successfully!");
           setEditingBookingId(null);
           fetchBookings();
+        } else if (data.requirePayment) {
+          // Initialize Razorpay for extra amount
+          const orderResponse = await fetch(`${backendUrl}/api/payment/razorpay`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ amount: data.amountToPay })
+          });
+          const orderData = await orderResponse.json();
+          if (orderData.success) {
+            const options = {
+              key: orderData.key_id,
+              amount: orderData.order.amount,
+              currency: 'INR',
+              name: 'Banaras Tour Update',
+              description: 'Additional Payment for Added Vehicles',
+              order_id: orderData.order.id,
+              handler: async function (paymentResponse) {
+                 // Verify payment and finalize update
+                 const verifyRes = await fetch(`${backendUrl}/api/payment/verify`, {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({
+                     razorpay_order_id: paymentResponse.razorpay_order_id,
+                     razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                     razorpay_signature: paymentResponse.razorpay_signature,
+                   }),
+                 });
+                 const verifyData = await verifyRes.json();
+                 if (verifyData.success) {
+                    // Tell the backend payment is confirmed, please update DB
+                    const finalUpdateRes = await fetch(`${backendUrl}/api/booking/update`, {
+                       method: 'POST',
+                       headers: {
+                         'Content-Type': 'application/json',
+                         ...(token && { 'Authorization': `Bearer ${token}` })
+                       },
+                       body: JSON.stringify({ ...payload, paymentConfirmed: true })
+                    });
+                    const finalUpdateData = await finalUpdateRes.json();
+                    if (finalUpdateData.success) {
+                      toast.success("Additional Payment Successful! Booking Updated.");
+                      setEditingBookingId(null);
+                      fetchBookings();
+                    } else {
+                      toast.error("Payment was successful but booking update failed: " + finalUpdateData.message);
+                    }
+                 } else {
+                   toast.error('Payment verification failed.');
+                 }
+              },
+              theme: { color: '#ea580c' }
+            };
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+          } else {
+            toast.error("Failed to initialize payment gateway.");
+          }
         } else {
           toast.error(data.message);
         }
@@ -276,13 +339,14 @@ const MyBookingPage = () => {
                         <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Tour Date: {new Date(booking.date).toLocaleDateString('en-IN')}
+                        Tour Date: {new Date(booking.date).toLocaleDateString('en-IN')} to {new Date(new Date(booking.date).getTime() + 86400000).toLocaleDateString('en-IN')} (2 Days Tour)
                       </p>
                       <p className="text-[10px] sm:text-xs font-medium text-gray-400 mt-1">Booked On: {booking.bookingDate}</p>
                     </div>
                     <div className="text-left">
                       <p className="text-xl sm:text-2xl font-bold text-orange-600">₹{booking.totalAmount.toLocaleString()}</p>
                       <p className="text-[10px] sm:text-xs font-medium text-gray-400 mt-1 uppercase tracking-wider">{booking.paymentStatus}</p>
+                      {booking.refundAmount > 0 && <p className="text-xs font-bold text-green-600 mt-1 px-2 py-0.5 bg-green-50 inline-block rounded border border-green-200">Refunded: ₹{booking.refundAmount.toLocaleString()}</p>}
                     </div>
                   </div>
 
