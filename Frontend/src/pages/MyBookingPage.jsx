@@ -2,8 +2,17 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
+
+const formatIN = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+};
 
 const MyBookingPage = () => {
   const { backendUrl, getToursData } = useContext(AppContext);
@@ -56,7 +65,7 @@ const MyBookingPage = () => {
             cancelComment: b.cancelComment || '',
             cancelledBy: b.cancelledBy || '',
             refundAmount: b.refundAmount || 0,
-            bookingDate: new Date(b.createdAt || Date.now()).toLocaleDateString('en-IN'),
+            bookingDate: formatIN(b.createdAt || Date.now()),
           }));
           setBookings(formattedBookings.reverse()); // latest first
         }
@@ -333,6 +342,100 @@ const MyBookingPage = () => {
     }
   };
 
+  const handleDownloadInvoice = (booking) => {
+    const doc = new jsPDF();
+    
+    // Header setup
+    doc.setFillColor(234, 88, 12); // ea580c (orange-600)
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(26);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BanarasTour', 15, 25);
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Tour Booking Invoice', 145, 25);
+    
+    // Details Section
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(11);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Order ID: #${booking.id?.slice(-6).toUpperCase() || 'TXN'}`, 15, 55);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Booked On: ${booking.bookingDate}`, 15, 63);
+    doc.text(`Status: ${booking.status}`, 15, 71);
+    doc.text(`Payment: ${booking.paymentStatus}`, 15, 79);
+    
+    // Customer details
+    doc.setFont('helvetica', 'bold');
+    doc.text('Customer Details', 120, 55);
+    doc.setFont('helvetica', 'normal');
+    const pdfName = doc.splitTextToSize(booking.name || 'N/A', 75);
+    doc.text(pdfName, 120, 63);
+    doc.text(`Email: ${booking.email}`, 120, 71 + ((pdfName.length - 1) * 5));
+    doc.text(`Phone: ${booking.phone}`, 120, 79 + ((pdfName.length - 1) * 5));
+
+    // Tour details
+    doc.setDrawColor(200, 200, 200);
+    const lineY1 = 85 + ((pdfName.length - 1) * 5);
+    doc.line(15, lineY1, 195, lineY1);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Tour Schedule', 15, lineY1 + 10);
+    doc.setFont('helvetica', 'normal');
+    
+    const day1 = new Date(booking.date);
+    const day2 = new Date(day1.getTime() + 86400000);
+    
+    doc.text(`Tour Dates: ${formatIN(day1.toISOString().split('T')[0])} to ${formatIN(day2.toISOString().split('T')[0])} (2 Days)`, 15, lineY1 + 18);
+    doc.text(`Total Guests: ${booking.guests} Guests`, 120, lineY1 + 18);
+
+    doc.line(15, lineY1 + 25, 195, lineY1 + 25);
+    
+    // Table of cars
+    const tableData = booking.cars.map(c => [
+       c.type.split('-')[0].trim(),
+       c.type.includes('Non AC') ? 'Non AC' : 'AC',
+       c.quantity,
+       `Rs ${getPriceFromType(c.type).toLocaleString()}`,
+       `Rs ${(getPriceFromType(c.type) * c.quantity).toLocaleString()}`
+    ]);
+    
+    tableData.unshift(['Base Tour Package (Guide + Entry)', '-', '-', '-', 'Rs 2,000']);
+    
+    doc.autoTable({
+        startY: lineY1 + 35,
+        head: [['Service / Vehicle', 'Type', 'Qty', 'Unit Price', 'Total']],
+        body: tableData,
+        headStyles: { fillColor: [234, 88, 12] },
+        alternateRowStyles: { fillColor: [250, 245, 240] },
+        styles: { font: 'helvetica' }
+    });
+
+    // Finance calculations
+    const finalY = doc.lastAutoTable.finalY + 15;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(`Grand Total: Rs ${booking.totalAmount.toLocaleString()}`, 130, finalY);
+    
+    if (booking.refundAmount > 0) {
+        doc.setTextColor(34, 197, 94); // Green
+        doc.text(`Refunded/Adjusted: Rs ${booking.refundAmount.toLocaleString()}`, 130, finalY + 10);
+    }
+    
+    // Footer notes
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(10);
+    doc.text('Thank you for booking with BanarasTour. For support, contact info@banarastour.com.', 15, 280);
+    
+    doc.save(`BanarasTour-Invoice-${booking.id?.slice(-8)}.pdf`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pt-10 pb-20 px-4 sm:px-10 md:px-20 lg:px-30">
       <div className="max-w-7xl mx-auto">
@@ -387,7 +490,7 @@ const MyBookingPage = () => {
                         <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Tour Date: {new Date(booking.date).toLocaleDateString('en-IN')} to {new Date(new Date(booking.date).getTime() + 86400000).toLocaleDateString('en-IN')} (2 Days Tour)
+                        Tour Date: {formatIN(booking.date)} to {formatIN(new Date(new Date(booking.date).getTime() + 86400000).toISOString().split('T')[0])} (2 Days Tour)
                       </p>
                       <p className="text-[10px] sm:text-xs font-medium text-gray-400 mt-1">Booked On: {booking.bookingDate}</p>
                     </div>
@@ -479,11 +582,20 @@ const MyBookingPage = () => {
                             Cancel Booking
                           </button>
                           
+                          {booking.status !== 'Completed' && booking.status !== 'Cancelled' && (
+                            <button 
+                              onClick={() => openEditMode(booking)}
+                              className="px-5 py-2 text-sm font-semibold rounded-lg text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition"
+                            >
+                              Edit Features
+                            </button>
+                          )}
                           <button 
-                            onClick={() => openEditMode(booking)}
-                            className="px-5 py-2 text-sm font-semibold rounded-lg text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition"
+                            onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(booking); }}
+                            className="px-5 py-2 text-sm font-semibold rounded-lg text-green-700 bg-green-50 border border-green-200 hover:bg-green-100 transition flex items-center gap-1"
                           >
-                            Edit Features
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Download Invoice
                           </button>
                         </div>
                       )}

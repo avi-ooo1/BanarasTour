@@ -2,6 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 
+const formatIN = (dateStr) => {
+    if (!dateStr) return '--';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '--';
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+};
+
 const AdminPanelPage = () => {
     const { tours, getToursData, backendUrl } = useContext(AppContext);
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -463,10 +470,10 @@ const AdminPanelPage = () => {
                                         <div className="flex-1 space-y-2">
                                             <div className="flex items-center gap-3">
                                                 <span className="bg-orange-100 text-orange-700 font-bold px-3 py-1 rounded-full text-xs">Order #{booking._id?.slice(-6) || idx}</span>
-                                                <span className="text-sm font-medium text-gray-500">Booked On: {new Date(booking.createdAt || Date.now()).toLocaleDateString('en-IN')}</span>
+                                                <span className="text-sm font-medium text-gray-500">Booked On: {formatIN(booking.createdAt || Date.now())}</span>
                                             </div>
                                             <h3 className="text-lg font-bold text-gray-800">{booking.name} <span className="text-sm font-normal text-gray-500">({booking.email})</span></h3>
-                                            <p className="text-gray-600 text-sm">Tour Date: <span className="font-semibold text-gray-900">{booking.date ? `${new Date(booking.date).toLocaleDateString('en-IN')} to ${new Date(new Date(booking.date).getTime() + 86400000).toLocaleDateString('en-IN')} (2 Days Tour)` : '--'}</span> | Guests: <span className="font-semibold">{booking.guests}</span></p>
+                                            <p className="text-gray-600 text-sm">Tour Date: <span className="font-semibold text-gray-900">{booking.date ? `${formatIN(booking.date)} to ${formatIN(new Date(new Date(booking.date).getTime() + 86400000).toISOString().split('T')[0])} (2 Days Tour)` : '--'}</span> | Guests: <span className="font-semibold">{booking.guests}</span></p>
                                             <p className="text-gray-600 text-sm">
                                                 Total: <span className="font-bold text-gray-900">₹{booking.totalAmount.toLocaleString()}</span> 
                                                 {booking.refundAmount > 0 && <span className="font-bold text-green-600 ml-2">(Refunded: ₹{booking.refundAmount.toLocaleString()})</span>}
