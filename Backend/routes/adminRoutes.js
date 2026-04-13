@@ -6,6 +6,6 @@ const adminRouter = express.Router();
 
 adminRouter.post('/login',adminLogin);
 adminRouter.get('/is-auth',authAdmin,isAdminAuth);
-adminRouter.get('/logout',authAdmin,adminLogout);
+adminRouter.post('/logout',authAdmin,adminLogout);
 
 export default adminRouter;

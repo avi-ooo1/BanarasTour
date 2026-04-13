@@ -23,7 +23,7 @@ function Navbar() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${backendUrl}/api/user/logout`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
             ...(token && { 'Authorization': `Bearer ${token}` })
         },

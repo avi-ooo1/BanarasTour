@@ -71,6 +71,7 @@ const AdminPanelPage = () => {
         try {
             const adminToken = localStorage.getItem('adminToken');
             const res = await fetch(`${backendUrl}/api/admin/logout`, { 
+                method: 'POST',
                 headers: {
                     ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
                 },

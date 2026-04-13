@@ -8,7 +8,7 @@ const userRouter = express.Router();
 userRouter.post("/register",register);
 userRouter.post("/login",login); 
 userRouter.get("/is-auth",authUser,isAuth);
-userRouter.get("/logout",authUser,userLogout);
+userRouter.post("/logout",authUser,userLogout);
 userRouter.post("/google-auth", googleAuth);
 userRouter.post("/update-profile", authUser, upload.single('image'), updateUserProfile);
 
