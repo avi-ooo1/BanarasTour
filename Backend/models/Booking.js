@@ -13,7 +13,8 @@ const bookingSchema = new mongoose.Schema({
     payment: { type: Boolean, default: false },
     status: { type: String, default: 'Booking Placed' },
     cancelReason: { type: String, default: '' },
-    cancelComment: { type: String, default: '' }
+    cancelComment: { type: String, default: '' },
+    cancelledBy: { type: String, default: '' }
 }, { timestamps: true });
 
 export const Booking = mongoose.models.booking || mongoose.model("booking", bookingSchema);

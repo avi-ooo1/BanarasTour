@@ -469,7 +469,11 @@ const AdminPanelPage = () => {
                                             <p className="text-gray-600 text-sm">Total: <span className="font-bold text-gray-900">₹{booking.totalAmount}</span> | Status: <span className={`font-bold ${booking.status === 'Cancelled' ? 'text-red-500' : booking.status === 'Completed' ? 'text-green-500' : 'text-blue-500'}`}>{booking.status}</span></p>
                                             {booking.status === 'Cancelled' && booking.cancelReason && (
                                                 <div className="mt-2 p-2 bg-red-50 rounded border border-red-100 text-sm">
-                                                    <span className="font-bold text-red-700">Reason: </span><span className="text-red-600">{booking.cancelReason}</span>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="font-bold text-red-700">Reason:</span>
+                                                        {booking.cancelledBy && <span className="text-[10px] bg-red-200 text-red-800 px-2 py-0.5 rounded font-bold uppercase tracking-wider">{booking.cancelledBy}</span>}
+                                                    </div>
+                                                    <span className="text-red-600 block">{booking.cancelReason}</span>
                                                     {booking.cancelComment && <p className="text-red-500 text-xs italic mt-1 pb-1">"{booking.cancelComment}"</p>}
                                                 </div>
                                             )}

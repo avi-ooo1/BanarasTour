@@ -112,6 +112,7 @@ export const updateBookingStatus = async(req,res) => {
         if (status === 'Cancelled') {
             updateData.cancelReason = reason || 'Cancelled by Admin';
             if (comment) updateData.cancelComment = comment;
+            updateData.cancelledBy = 'Tour Guide';
         }
         await Booking.findByIdAndUpdate(id, updateData);
         res.json({success:true, message:"Booking Status Updated"});
@@ -183,7 +184,8 @@ export const cancelBooking = async (req, res) => {
         await Booking.findByIdAndUpdate(id, { 
             status: 'Cancelled',
             cancelReason: reason || 'Not provided',
-            cancelComment: comment || ''
+            cancelComment: comment || '',
+            cancelledBy: 'User'
         });
         res.json({ success: true, message: "Booking Cancelled Successfully" });
     } catch (error) {

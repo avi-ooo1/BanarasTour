@@ -43,6 +43,7 @@ const MyBookingPage = () => {
             paymentStatus: b.payment ? 'Paid Online' : (b.paymentMethod === 'Offline' ? 'Pay on Arrival' : 'Pending'),
             cancelReason: b.cancelReason || '',
             cancelComment: b.cancelComment || '',
+            cancelledBy: b.cancelledBy || '',
           }));
           setBookings(formattedBookings.reverse()); // latest first
         }
@@ -310,7 +311,12 @@ const MyBookingPage = () => {
                   {/* Show Cancel Info if Cancelled */}
                   {booking.status === 'Cancelled' && booking.cancelReason && (
                     <div className="mt-5 p-4 bg-red-50/50 border border-red-100 rounded-xl">
-                      <h4 className="text-xs font-bold text-red-800 uppercase tracking-wider mb-1">Cancellation Reason</h4>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="text-xs font-bold text-red-800 uppercase tracking-wider">Cancellation Reason</h4>
+                        {booking.cancelledBy && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">By {booking.cancelledBy}</span>
+                        )}
+                      </div>
                       <p className="text-sm text-red-900 font-medium">{booking.cancelReason}</p>
                       {booking.cancelComment && (
                         <p className="text-sm text-red-700 italic mt-1">"{booking.cancelComment}"</p>
