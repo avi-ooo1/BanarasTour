@@ -107,8 +107,13 @@ export const getAllBookings = async(req,res) => {
 // Admin: Update Booking Status : api/booking/status
 export const updateBookingStatus = async(req,res) => {
     try {
-        const {id, status} = req.body;
-        await Booking.findByIdAndUpdate(id, {status});
+        const {id, status, reason, comment} = req.body;
+        let updateData = { status };
+        if (status === 'Cancelled') {
+            updateData.cancelReason = reason || 'Cancelled by Admin';
+            if (comment) updateData.cancelComment = comment;
+        }
+        await Booking.findByIdAndUpdate(id, updateData);
         res.json({success:true, message:"Booking Status Updated"});
     } catch (error) {
         console.log(error);

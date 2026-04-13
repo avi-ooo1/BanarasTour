@@ -17,6 +17,10 @@ const AdminPanelPage = () => {
     const [category, setCategory] = useState('Temple');
     const [image, setImage] = useState(null);
 
+    // Admin Cancellation UI state
+    const [adminCancelId, setAdminCancelId] = useState(null);
+    const [adminCancelData, setAdminCancelData] = useState({ reason: '', comment: '' });
+
     useEffect(() => {
         checkAuth();
     }, []);
@@ -191,6 +195,37 @@ const AdminPanelPage = () => {
         } catch (error) {
             console.error(error);
             toast.error("Error updating status");
+        }
+    };
+
+    const confirmAdminCancel = async (id) => {
+        if (!adminCancelData.reason) {
+            toast.warning("Please select a cancellation reason");
+            return;
+        }
+        try {
+            const adminToken = localStorage.getItem('adminToken');
+            const res = await fetch(`${backendUrl}/api/booking/status`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
+                },
+                body: JSON.stringify({ id, status: 'Cancelled', reason: adminCancelData.reason, comment: adminCancelData.comment }),
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast.success("Booking Cancelled Successfully");
+                setAdminCancelId(null);
+                setAdminCancelData({ reason: '', comment: '' });
+                fetchBookings();
+            } else {
+                toast.error(data.message || "Failed to cancel");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Error cancelling booking");
         }
     };
 
@@ -442,7 +477,14 @@ const AdminPanelPage = () => {
                                         <div className="flex flex-col gap-2 justify-center min-w-[150px]">
                                             <select 
                                                 value={booking.status || 'Booking Placed'}
-                                                onChange={(e) => handleUpdateBookingStatus(booking._id, e.target.value)}
+                                                onChange={(e) => {
+                                                    if (e.target.value === 'Cancelled') {
+                                                        setAdminCancelId(booking._id);
+                                                        setAdminCancelData({ reason: '', comment: '' });
+                                                    } else {
+                                                        handleUpdateBookingStatus(booking._id, e.target.value);
+                                                    }
+                                                }}
                                                 className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
                                             >
                                                 <option value="Booking Placed">Booking Placed</option>
@@ -454,6 +496,36 @@ const AdminPanelPage = () => {
                                                 Delete Order
                                             </button>
                                         </div>
+                                        
+                                        {/* Admin Cancellation Form */}
+                                        {adminCancelId === booking._id && (
+                                            <div className="w-full bg-red-50 p-4 border border-red-200 rounded-xl mt-4 md:col-span-full">
+                                                <h4 className="text-sm font-bold text-red-800 mb-3">Provide Cancellation Reason</h4>
+                                                <select 
+                                                    value={adminCancelData.reason}
+                                                    onChange={(e) => setAdminCancelData({...adminCancelData, reason: e.target.value})}
+                                                    className="w-full px-3 py-2 text-sm border border-red-200 rounded-lg bg-white mb-3 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                                >
+                                                    <option value="" disabled>Select a reason...</option>
+                                                    <option value="Overbooked / Non-Availability">Overbooked / Non-Availability</option>
+                                                    <option value="Customer requested cancellation manually">Customer requested cancellation manually</option>
+                                                    <option value="Payment / Verification failure">Payment / Verification failure</option>
+                                                    <option value="Weather / Security issues">Weather / Security issues</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                                <textarea 
+                                                    value={adminCancelData.comment}
+                                                    onChange={(e) => setAdminCancelData({...adminCancelData, comment: e.target.value})}
+                                                    placeholder="Admin comments (Optional)"
+                                                    className="w-full px-3 py-2 text-sm border border-red-200 rounded-lg bg-white mb-3 resize-none focus:outline-none focus:ring-1 focus:ring-red-500"
+                                                    rows="2"
+                                                ></textarea>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => confirmAdminCancel(booking._id)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition">Confirm Cancel</button>
+                                                    <button onClick={() => setAdminCancelId(null)} className="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold rounded-lg transition">Go Back</button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))
                             )}
