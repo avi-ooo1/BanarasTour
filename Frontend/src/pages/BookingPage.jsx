@@ -78,9 +78,10 @@ const BookingPage = () => {
     
     // Check if adding this quantity exceeds availability
     const currentTotalCars = formData.selectedCars.reduce((sum, car) => sum + car.quantity, 0);
+    const maxCarsAllowed = Math.ceil(Number(formData.guests) / 4);
 
-    if (currentTotalCars + qty > Number(formData.guests)) {
-      toast.error(`You cannot book more cars (${currentTotalCars + qty}) than the number of guests (${formData.guests}).`);
+    if (currentTotalCars + qty > maxCarsAllowed) {
+      toast.error(`For ${formData.guests} guest(s), you can only book up to ${maxCarsAllowed} vehicle(s). Please choose vehicles accordingly.`);
       return;
     }
     if (currentTotalCars + qty > availableCars) {
@@ -130,14 +131,15 @@ const BookingPage = () => {
     }, 0);
 
     const totalCarsCount = formData.selectedCars.reduce((sum, car) => sum + car.quantity, 0);
+    const maxCarsAllowed = Math.ceil(Number(formData.guests) / 4);
 
     if (Number(formData.guests) > totalCapacity) {
       toast.error(`You have selected vehicles for only ${totalCapacity} guests, but entered ${formData.guests} guests. Please add more vehicles or reduce guests.`);
       return;
     }
 
-    if (totalCarsCount > Number(formData.guests)) {
-      toast.error(`You cannot book more cars (${totalCarsCount}) than the number of guests (${formData.guests}). Please remove excess cars.`);
+    if (totalCarsCount > maxCarsAllowed) {
+      toast.error(`For ${formData.guests} guest(s), you can only book up to ${maxCarsAllowed} vehicle(s). Please remove excess cars.`);
       return;
     }
 
