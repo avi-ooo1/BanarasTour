@@ -66,6 +66,9 @@ const MyBookingPage = () => {
             cancelledBy: b.cancelledBy || '',
             refundAmount: b.refundAmount || 0,
             bookingDate: formatIN(b.createdAt || Date.now()),
+            name: b.name || 'Customer',
+            email: b.email || 'N/A',
+            phone: b.phone || 'N/A',
           }));
           setBookings(formattedBookings.reverse()); // latest first
         }
